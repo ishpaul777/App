@@ -33,6 +33,15 @@ const propTypes = {
     /** A maximum date of calendar to select */
     maxDate: PropTypes.objectOf(Date),
 
+    /** Year picker route */
+    yearPickerRoute: PropTypes.shape({
+        /** Route name */
+        route: PropTypes.string,
+
+        /** getRoute function retrieves the route with params */
+        getRoute: PropTypes.func,
+    }),
+
     ...withLocalizePropTypes,
     ...baseTextInputPropTypes,
 };
@@ -44,7 +53,7 @@ const datePickerDefaultProps = {
     value: undefined,
 };
 
-function NewDatePicker({containerStyles, defaultValue, disabled, errorText, inputID, isSmallScreenWidth, label, maxDate, minDate, onInputChange, onTouched, placeholder, translate, value}) {
+function NewDatePicker({containerStyles, defaultValue, disabled, errorText, inputID, isSmallScreenWidth, label, maxDate, minDate, onInputChange, yearPickerRoute, onTouched, placeholder, translate, value}) {
     const [selectedDate, setSelectedDate] = useState(value || defaultValue || undefined);
 
     useEffect(() => {
@@ -92,6 +101,7 @@ function NewDatePicker({containerStyles, defaultValue, disabled, errorText, inpu
                     maxDate={maxDate}
                     value={selectedDate}
                     onSelected={setSelectedDate}
+                    yearPickerRoute={yearPickerRoute}
                 />
             </View>
         </View>

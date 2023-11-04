@@ -10,12 +10,13 @@ import Text from '@components/Text';
 import withLocalize, {withLocalizePropTypes} from '@components/withLocalize';
 import DateUtils from '@libs/DateUtils';
 import getButtonState from '@libs/getButtonState';
+import Navigation from '@libs/Navigation/Navigation';
 import styles from '@styles/styles';
 import * as StyleUtils from '@styles/StyleUtils';
 import CONST from '@src/CONST';
 import ArrowIcon from './ArrowIcon';
 import generateMonthMatrix from './generateMonthMatrix';
-import YearPickerModal from './YearPickerModal';
+// import YearPickerModal from './YearPickerModal';
 
 const propTypes = {
     /** An initial value of date string */
@@ -29,6 +30,15 @@ const propTypes = {
 
     /** A function called when the date is selected */
     onSelected: PropTypes.func,
+
+     /** Year picker route */
+     yearPickerRoute: PropTypes.shape({
+        /** Route name */
+        route: PropTypes.string,
+
+        /** getRoute function retrieves the route with params */
+        getRoute: PropTypes.func,
+    }).isRequired,
 
     ...withLocalizePropTypes,
 };
@@ -59,7 +69,6 @@ class CalendarPicker extends React.PureComponent {
 
         this.state = {
             currentDateView,
-            isYearPickerVisible: false,
             years: _.map(
                 Array.from({length: maxYear - minYear + 1}, (v, i) => i + minYear),
                 (value) => ({
@@ -83,7 +92,6 @@ class CalendarPicker extends React.PureComponent {
 
             return {
                 currentDateView: newCurrentDateView,
-                isYearPickerVisible: false,
                 years: _.map(prev.years, (item) => ({
                     ...item,
                     isSelected: item.value === newCurrentDateView.getFullYear(),
@@ -135,7 +143,10 @@ class CalendarPicker extends React.PureComponent {
                     dataSet={{[CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true}}
                 >
                     <PressableWithFeedback
-                        onPress={() => this.setState({isYearPickerVisible: true})}
+                        onPress={() => {
+                            const activeRoute = Navigation.getActiveRoute().replace(/\?.*/, '');
+                            Navigation.navigate(this.props.yearPickerRoute.getRoute(currentYearView, activeRoute))
+                        }}
                         style={[styles.alignItemsCenter, styles.flexRow, styles.flex1, styles.justifyContentStart]}
                         wrapperStyle={[styles.alignItemsCenter]}
                         hoverDimmingValue={1}
@@ -233,13 +244,6 @@ class CalendarPicker extends React.PureComponent {
                         })}
                     </View>
                 ))}
-                <YearPickerModal
-                    isVisible={this.state.isYearPickerVisible}
-                    years={this.state.years}
-                    currentYear={currentYearView}
-                    onYearChange={this.onYearSelected}
-                    onClose={() => this.setState({isYearPickerVisible: false})}
-                />
             </View>
         );
     }

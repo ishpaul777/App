@@ -86,6 +86,7 @@ function DateOfBirthPage({translate, privatePersonalDetails}) {
                         defaultValue={privatePersonalDetails.dob || ''}
                         minDate={subYears(new Date(), CONST.DATE_BIRTH.MAX_AGE)}
                         maxDate={subYears(new Date(), CONST.DATE_BIRTH.MIN_AGE)}
+                        yearPickerRoute={ROUTES.SETTINGS_PERSONAL_DETAILS_DATE_OF_BIRTH_YEAR_PICKER}
                     />
                 </FormProvider>
             )}
