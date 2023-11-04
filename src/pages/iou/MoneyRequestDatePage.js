@@ -81,6 +81,11 @@ function MoneyRequestDatePage({iou, route, selectedTab}) {
         navigateBack();
     }
 
+    const yearPickerRoute = {
+        ...ROUTES.MONEY_REQUEST_DATE_YEAR_PICKER,
+        getRoute: (year, backTo) => ROUTES.MONEY_REQUEST_DATE_YEAR_PICKER.getRoute(iouType, year, backTo, reportID),
+    };
+
     return (
         <ScreenWrapper
             includeSafeAreaPaddingBottom={false}
@@ -103,6 +108,7 @@ function MoneyRequestDatePage({iou, route, selectedTab}) {
                     label={translate('common.date')}
                     defaultValue={iou.created}
                     maxDate={new Date()}
+                    yearPickerRoute={yearPickerRoute}
                 />
             </FormProvider>
         </ScreenWrapper>

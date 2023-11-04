@@ -1,8 +1,7 @@
-import {getYear, subYears} from 'date-fns';
+import {getYear} from 'date-fns';
 import PropTypes from 'prop-types';
 import React from 'react';
 import YearPickerModal from '@components/NewDatePicker/CalendarPicker/YearPickerModal';
-import CONST from '@src/CONST';
 
 const propTypes = {
     /** Route from navigation */
@@ -24,18 +23,17 @@ const propTypes = {
     }).isRequired,
 };
 
-function DobYearPickerPage({route, navigation}) {
+function MoneyRequestDateYearPickerPage({route, navigation}) {
     return (
         <YearPickerModal
             route={route}
             navigation={navigation}
-            maxYear={getYear(new Date(subYears(new Date(), CONST.DATE_BIRTH.MAX_AGE)))}
-            minYear={getYear(new Date(subYears(new Date(), CONST.DATE_BIRTH.MIN_AGE)))}
+            maxYear={getYear(new Date())}
         />
     );
 }
 
-DobYearPickerPage.displayName = 'DobYearPickerPage';
-DobYearPickerPage.propTypes = propTypes;
+MoneyRequestDateYearPickerPage.displayName = 'MoneyRequestDateYearPickerPage';
+MoneyRequestDateYearPickerPage.propTypes = propTypes;
 
-export default DobYearPickerPage;
+export default MoneyRequestDateYearPickerPage;

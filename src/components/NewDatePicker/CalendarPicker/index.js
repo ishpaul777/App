@@ -1,5 +1,6 @@
 import {addMonths, endOfMonth, format, getYear, isSameDay, parseISO, setDate, setYear, startOfDay, subMonths} from 'date-fns';
 import Str from 'expensify-common/lib/str';
+import lodashGet from 'lodash/get';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {View} from 'react-native';
@@ -14,9 +15,9 @@ import Navigation from '@libs/Navigation/Navigation';
 import styles from '@styles/styles';
 import * as StyleUtils from '@styles/StyleUtils';
 import CONST from '@src/CONST';
+import withNavigation from '../../withNavigation';
 import ArrowIcon from './ArrowIcon';
 import generateMonthMatrix from './generateMonthMatrix';
-// import YearPickerModal from './YearPickerModal';
 
 const propTypes = {
     /** An initial value of date string */
@@ -31,8 +32,8 @@ const propTypes = {
     /** A function called when the date is selected */
     onSelected: PropTypes.func,
 
-     /** Year picker route */
-     yearPickerRoute: PropTypes.shape({
+    /** Year picker route */
+    yearPickerRoute: PropTypes.shape({
         /** Route name */
         route: PropTypes.string,
 
@@ -84,6 +85,23 @@ class CalendarPicker extends React.PureComponent {
         this.moveToNextMonth = this.moveToNextMonth.bind(this);
         this.onDayPressed = this.onDayPressed.bind(this);
         this.onYearSelected = this.onYearSelected.bind(this);
+    }
+
+    componentDidMount() {
+        const yearFromRoute = lodashGet(this.props, 'currentRoute.params.year');
+        if (!yearFromRoute || yearFromRoute === this.state.currentDateView.getFullYear()) {
+            return;
+        }
+        this.onYearSelected(yearFromRoute);
+    }
+
+    componentDidUpdate(prevProps) {
+        const yearFromRoute = lodashGet(this.props, 'currentRoute.params.year');
+        const prevYearFromRoute = lodashGet(prevProps, 'currentRoute.params.year');
+        if (!yearFromRoute || yearFromRoute === this.state.currentDateView.getFullYear() || yearFromRoute === prevYearFromRoute) {
+            return;
+        }
+        this.onYearSelected(yearFromRoute);
     }
 
     onYearSelected(year) {
@@ -145,7 +163,7 @@ class CalendarPicker extends React.PureComponent {
                     <PressableWithFeedback
                         onPress={() => {
                             const activeRoute = Navigation.getActiveRoute().replace(/\?.*/, '');
-                            Navigation.navigate(this.props.yearPickerRoute.getRoute(currentYearView, activeRoute))
+                            Navigation.navigate(this.props.yearPickerRoute.getRoute(currentYearView, activeRoute));
                         }}
                         style={[styles.alignItemsCenter, styles.flexRow, styles.flex1, styles.justifyContentStart]}
                         wrapperStyle={[styles.alignItemsCenter]}
@@ -252,4 +270,4 @@ class CalendarPicker extends React.PureComponent {
 CalendarPicker.propTypes = propTypes;
 CalendarPicker.defaultProps = defaultProps;
 
-export default withLocalize(CalendarPicker);
+export default withNavigation(withLocalize(CalendarPicker));

@@ -246,6 +246,15 @@ export default {
         route: ':iouType/new/date/:reportID?',
         getRoute: (iouType: string, reportID = '') => `${iouType}/new/date/${reportID}`,
     },
+    MONEY_REQUEST_DATE_YEAR_PICKER: {
+        route: ':iouType/new/date/year/:reportID?',
+        getRoute: (iouType: string, year: string, backTo: string, reportID = '') => {
+            if (reportID) {
+                return getUrlWithBackToParam(`${iouType}/new/date/year/${reportID}?year=${year}`, backTo);
+            }
+            return getUrlWithBackToParam(`${iouType}/new/date/year?year=${year}`, backTo);
+        },
+    },
     MONEY_REQUEST_CURRENCY: {
         route: ':iouType/new/currency/:reportID?',
         getRoute: (iouType: string, reportID: string, currency: string, backTo: string) => `${iouType}/new/currency/${reportID}?currency=${currency}&backTo=${backTo}`,

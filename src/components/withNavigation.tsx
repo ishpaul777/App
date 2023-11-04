@@ -17,6 +17,7 @@ export default function withNavigation<TProps extends WithNavigationProps, TRef>
                 {...(props as TProps)}
                 ref={ref}
                 navigation={navigation}
+                currentRoute={navigation.getState().routes[navigation.getState().index]}
             />
         );
     }
