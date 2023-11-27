@@ -21,6 +21,15 @@ function setCloseModal(onClose: () => void) {
     };
 }
 
+function removeCloseModal(onClose: () => void) {
+    const index = closeModals.indexOf(onClose);
+
+    if (index === -1) {
+        return;
+    }
+    closeModals.splice(index, 1);
+}
+
 /**
  * Close modal in other parts of the app
  */
@@ -29,14 +38,19 @@ function close(onModalCloseCallback: () => void, isNavigating = true) {
         onModalCloseCallback();
         return;
     }
-    onModalClose = onModalCloseCallback;
-    [...closeModals].reverse().forEach((onClose) => {
-        onClose(isNavigating);
+    [...closeModals].forEach((closeModal, index) => {
+        if (index === closeModals.length - 1) {
+            closeModal(isNavigating);
+            return;
+        }
+
+        closeModal(isNavigating);
     });
+    onModalClose = onModalCloseCallback;
 }
 
 function onModalDidClose() {
-    if (!onModalClose) {
+    if (!onModalClose || closeModals.length > 0) {
         return;
     }
     onModalClose();
@@ -58,4 +72,4 @@ function willAlertModalBecomeVisible(isVisible: boolean) {
     Onyx.merge(ONYXKEYS.MODAL, {willAlertModalBecomeVisible: isVisible});
 }
 
-export {setCloseModal, close, onModalDidClose, setModalVisibility, willAlertModalBecomeVisible};
+export {setCloseModal, close, onModalDidClose, setModalVisibility, willAlertModalBecomeVisible, removeCloseModal};

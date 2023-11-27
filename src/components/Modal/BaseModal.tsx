@@ -44,6 +44,7 @@ function BaseModal(
     const theme = useTheme();
     const styles = useThemeStyles();
     const {windowWidth, windowHeight, isSmallScreenWidth} = useWindowDimensions();
+    const onCloseRef = useRef(onClose);
 
     const safeAreaInsets = useSafeAreaInsets();
 
@@ -56,6 +57,7 @@ function BaseModal(
      */
     const hideModal = useCallback(
         (callHideCallback = true) => {
+            // Modal.removeCloseModal(onClose)
             Modal.willAlertModalBecomeVisible(false);
             if (shouldSetModalVisibility) {
                 Modal.setModalVisibility(false);
@@ -73,20 +75,17 @@ function BaseModal(
 
     useEffect(() => {
         isVisibleRef.current = isVisible;
-        let removeOnCloseListener: () => void;
+
         if (isVisible) {
             Modal.willAlertModalBecomeVisible(true);
             // To handle closing any modal already visible when this modal is mounted, i.e. PopoverReportActionContextMenu
-            removeOnCloseListener = Modal.setCloseModal(onClose);
+            Modal.setCloseModal(onClose);
         }
 
         return () => {
-            if (!removeOnCloseListener) {
-                return;
-            }
-            removeOnCloseListener();
+            Modal.removeCloseModal(onClose);
         };
-    }, [isVisible, wasVisible, onClose]);
+    }, [isVisible, hideModal, wasVisible, onClose]);
 
     useEffect(
         () => () => {
