@@ -21,15 +21,6 @@ function setCloseModal(onClose: () => void) {
     };
 }
 
-function removeCloseModal(onClose: () => void) {
-    const index = closeModals.indexOf(onClose);
-
-    if (index === -1) {
-        return;
-    }
-    closeModals.splice(index, 1);
-}
-
 /**
  * Close modal in other parts of the app
  */
@@ -72,4 +63,4 @@ function willAlertModalBecomeVisible(isVisible: boolean) {
     Onyx.merge(ONYXKEYS.MODAL, {willAlertModalBecomeVisible: isVisible});
 }
 
-export {setCloseModal, close, onModalDidClose, setModalVisibility, willAlertModalBecomeVisible, removeCloseModal};
+export {setCloseModal, close, onModalDidClose, setModalVisibility, willAlertModalBecomeVisible};
