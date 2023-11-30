@@ -1,7 +1,9 @@
 import React, {Component} from 'react';
-import {View} from 'react-native';
+import {ActivityIndicator, View} from 'react-native';
 import PDF from 'react-native-pdf';
 import FullScreenLoadingIndicator from '@components/FullscreenLoadingIndicator';
+import Icon from '@components/Icon';
+import * as Expensicons from '@components/Icon/Expensicons';
 import KeyboardAvoidingView from '@components/KeyboardAvoidingView';
 import PressableWithoutFeedback from '@components/Pressable/PressableWithoutFeedback';
 import Text from '@components/Text';
@@ -128,7 +130,11 @@ class PDFView extends Component {
     }
 
     renderPDFView() {
-        const pdfStyles = [this.props.themeStyles.imageModalPDF, StyleUtils.getWidthAndHeightStyle(this.props.windowWidth, this.props.windowHeight)];
+        const isUsedInAsMessageAttachment = !(this.props.isUsedInAttachmentModal && !this.props.isUsedInCarousel);
+        const pdfStyles =
+            isUsedInAsMessageAttachment && !this.state.successToLoadPDF
+                ? [this.props.themeStyles.invisible]
+                : [this.props.themeStyles.imageModalPDF, StyleUtils.getWidthAndHeightStyle(this.props.windowWidth, this.props.windowHeight)];
 
         // If we haven't yet successfully validated the password and loaded the PDF,
         // then we need to hide the react-native-pdf/PDF component so that PDFPasswordForm
@@ -143,18 +149,44 @@ class PDFView extends Component {
                 ? [this.props.themeStyles.w100, this.props.themeStyles.flex1]
                 : [this.props.themeStyles.alignItemsCenter, this.props.themeStyles.flex1];
 
+        const failedMessageStyles = isUsedInAsMessageAttachment
+            ? [this.props.themeStyles.defaultAttachmentView]
+            : [this.props.themeStyles.flex1, this.props.themeStyles.justifyContentCenter];
+
         return (
             <View style={containerStyles}>
                 {this.state.failedToLoadPDF && (
-                    <View style={[this.props.themeStyles.flex1, this.props.themeStyles.justifyContentCenter]}>
-                        <Text style={this.props.errorLabelStyles}>{this.props.translate('attachmentView.failedToLoadPDF')}</Text>
+                    <View style={failedMessageStyles}>
+                        {isUsedInAsMessageAttachment ? (
+                            <>
+                                <View style={this.props.themeStyles.mr2}>
+                                    <Icon src={Expensicons.Paperclip} />
+                                </View>
+                                <Text
+                                    style={[
+                                        this.props.themeStyles.textStrong,
+                                        this.props.themeStyles.flexShrink1,
+                                        this.props.themeStyles.breakAll,
+                                        this.props.themeStyles.flexWrap,
+                                        this.props.themeStyles.mw100,
+                                    ]}
+                                >
+                                    {this.props.fileName}
+                                </Text>
+                                <View style={this.props.themeStyles.ml2}>
+                                    <Icon src={Expensicons.Download} />
+                                </View>
+                            </>
+                        ) : (
+                            <Text style={this.props.errorLabelStyles}>{this.props.translate('attachmentView.failedToLoadPDF')}</Text>
+                        )}
                     </View>
                 )}
                 {this.state.shouldAttemptPDFLoad && (
                     <PDF
                         fitPolicy={0}
                         trustAllCerts={false}
-                        renderActivityIndicator={() => <FullScreenLoadingIndicator />}
+                        renderActivityIndicator={isUsedInAsMessageAttachment ? () => <FullScreenLoadingIndicator /> : () => null}
                         source={{uri: this.props.sourceURL}}
                         style={pdfStyles}
                         onError={this.handleFailureToLoadPDF}
@@ -164,7 +196,18 @@ class PDFView extends Component {
                         onScaleChanged={this.props.onScaleChanged}
                     />
                 )}
-
+                {this.state.shouldShowLoadingIndicator && isUsedInAsMessageAttachment && (
+                    <View
+                        style={[
+                            this.props.themeStyles.flex0,
+                            this.props.themeStyles.justifyContentCenter,
+                            this.props.themeStyles.alignItemsCenter,
+                            this.props.themeStyles.chatItemAttachmentPlaceholder,
+                        ]}
+                    >
+                        <ActivityIndicator />
+                    </View>
+                )}
                 {this.state.shouldRequestPassword && (
                     <KeyboardAvoidingView style={this.props.themeStyles.flex1}>
                         <PDFPasswordForm

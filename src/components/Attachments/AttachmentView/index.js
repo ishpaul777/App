@@ -137,6 +137,7 @@ function AttachmentView({
                     isUsedInCarousel={isUsedInCarousel}
                     isFocused={isFocused}
                     onPress={onPress}
+                    isUsedInAttachmentModal={isUsedInAttachmentModal}
                     onScaleChanged={onScaleChanged}
                     onToggleKeyboard={onToggleKeyboard}
                     onLoadComplete={() => !loadComplete && setLoadComplete(true)}

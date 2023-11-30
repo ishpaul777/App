@@ -8,6 +8,7 @@ function BaseAttachmentViewPdf({
     encryptedSourceUrl,
     isFocused,
     isUsedInCarousel,
+    isUsedInAttachmentModal,
     onPress,
     onScaleChanged: onScaleChangedProp,
     onToggleKeyboard,
@@ -52,6 +53,8 @@ function BaseAttachmentViewPdf({
             sourceURL={encryptedSourceUrl}
             fileName={file.name}
             style={style}
+            isUsedInnCarousel={isUsedInCarousel}
+            isUsedInAttachmentModal={isUsedInAttachmentModal}
             onToggleKeyboard={onToggleKeyboard}
             onScaleChanged={onScaleChanged}
             onLoadComplete={onLoadComplete}

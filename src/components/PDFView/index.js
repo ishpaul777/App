@@ -7,6 +7,8 @@ import {Document, Page, pdfjs} from 'react-pdf/dist/esm/entry.webpack';
 import {VariableSizeList as List} from 'react-window';
 import _ from 'underscore';
 import FullScreenLoadingIndicator from '@components/FullscreenLoadingIndicator';
+import Icon from '@components/Icon';
+import * as Expensicons from '@components/Icon/Expensicons';
 import PressableWithoutFeedback from '@components/Pressable/PressableWithoutFeedback';
 import Text from '@components/Text';
 import withLocalize from '@components/withLocalize';
@@ -265,12 +267,16 @@ class PDFView extends Component {
         const styles = this.props.themeStyles;
         const pageWidth = this.calculatePageWidth();
         const outerContainerStyle = [styles.w100, styles.h100, styles.justifyContentCenter, styles.alignItemsCenter];
+        const isUsedInAsMessageAttachment = !(this.props.isUsedInAttachmentModal && !this.props.isUsedInCarousel);
 
         // If we're requesting a password then we need to hide - but still render -
         // the PDF component.
         const pdfContainerStyle = this.state.shouldRequestPassword
             ? [styles.PDFView, styles.noSelect, this.props.style, styles.invisible]
             : [styles.PDFView, styles.noSelect, this.props.style];
+        const failedMessageStyles = isUsedInAsMessageAttachment
+            ? [this.props.themeStyles.defaultAttachmentView]
+            : [this.props.themeStyles.flex1, this.props.themeStyles.justifyContentCenter];
 
         return (
             <View style={outerContainerStyle}>
@@ -284,7 +290,33 @@ class PDFView extends Component {
                     }) => this.setState({containerWidth: width, containerHeight: height})}
                 >
                     <Document
-                        error={<Text style={this.props.errorLabelStyles}>{this.props.translate('attachmentView.failedToLoadPDF')}</Text>}
+                        error={
+                            <View style={failedMessageStyles}>
+                                {isUsedInAsMessageAttachment ? (
+                                    <>
+                                        <View style={this.props.themeStyles.mr2}>
+                                            <Icon src={Expensicons.Paperclip} />
+                                        </View>
+                                        <Text
+                                            style={[
+                                                this.props.themeStyles.textStrong,
+                                                this.props.themeStyles.flexShrink1,
+                                                this.props.themeStyles.breakAll,
+                                                this.props.themeStyles.flexWrap,
+                                                this.props.themeStyles.mw100,
+                                            ]}
+                                        >
+                                            {this.props.fileName}
+                                        </Text>
+                                        <View style={this.props.themeStyles.ml2}>
+                                            <Icon src={Expensicons.Download} />
+                                        </View>
+                                    </>
+                                ) : (
+                                    <Text style={this.props.errorLabelStyles}>{this.props.translate('attachmentView.failedToLoadPDF')}</Text>
+                                )}
+                            </View>
+                        }
                         loading={<FullScreenLoadingIndicator />}
                         file={this.props.sourceURL}
                         options={{
