@@ -19,6 +19,9 @@ const propTypes = {
 
             /** The report ID of the IOU */
             reportID: PropTypes.string,
+
+            /** The backto fallback route */
+            backTo: PropTypes.string,
         }),
     }).isRequired,
 
@@ -34,7 +37,6 @@ function EditRequestReceiptPage({route, transactionID}) {
     const styles = useThemeStyles();
     const {translate} = useLocalize();
     const [isDraggingOver, setIsDraggingOver] = useState(false);
-
     return (
         <ScreenWrapper
             includeSafeAreaPaddingBottom={false}
@@ -47,7 +49,7 @@ function EditRequestReceiptPage({route, transactionID}) {
                     <View style={[styles.flex1, safeAreaPaddingBottomStyle]}>
                         <HeaderWithBackButton
                             title={translate('common.receipt')}
-                            onBackButtonPress={Navigation.goBack}
+                            onBackButtonPress={() => Navigation.goBack(route.params.backTo || "")}
                         />
                         <ReceiptSelector
                             route={route}

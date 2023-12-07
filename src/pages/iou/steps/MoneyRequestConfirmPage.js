@@ -348,7 +348,10 @@ function MoneyRequestConfirmPage(props) {
                             {
                                 icon: Expensicons.Receipt,
                                 text: props.translate('receipt.addReceipt'),
-                                onSelected: () => Navigation.navigate(ROUTES.MONEY_REQUEST_RECEIPT.getRoute(iouType, reportID)),
+                                onSelected: () => {
+                                    Navigation.navigate(ROUTES.MONEY_REQUEST_RECEIPT.getRoute(iouType, reportID))
+                                    Navigation.setParams({backTo: ROUTES.MONEY_REQUEST_CONFIRMATION.getRoute(iouType, reportID)});
+                                },
                             },
                         ]}
                     />
