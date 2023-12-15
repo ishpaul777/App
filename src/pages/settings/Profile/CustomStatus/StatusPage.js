@@ -103,7 +103,15 @@ function StatusPage({draftStatus, currentUserPersonalDetails}) {
         formRef.current.resetForm({[INPUT_IDS.EMOJI_CODE]: initialEmoji});
     };
 
-    useEffect(() => setBrickRoadIndicator(isValidClearAfterDate() ? null : CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR), [isValidClearAfterDate]);
+    useEffect(() => {
+        // if the currentUserClearAfter is in past and draftClearAfter is not set, then we need to clear the status
+        console.log('currentUserClearAfter', currentUserClearAfter < Date.now(), draftClearAfter);
+        if (currentUserClearAfter && !draftClearAfter && currentUserClearAfter < Date.now()) {
+            User.clearCustomStatus();
+        } else {
+            setBrickRoadIndicator(isValidClearAfterDate() ? null : CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR);
+        }
+    }, [currentUserClearAfter, draftClearAfter, isValidClearAfterDate]);
 
     useEffect(() => {
         if (!currentUserEmojiCode && !currentUserClearAfter && !draftClearAfter) {

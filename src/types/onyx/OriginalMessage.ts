@@ -1,4 +1,4 @@
-import {ValueOf} from 'type-fest';
+import { ValueOf } from 'type-fest';
 import CONST from '@src/CONST';
 import DeepValueOf from '@src/types/utils/DeepValueOf';
 
@@ -19,6 +19,7 @@ type OriginalMessageActionName =
     | 'TASKCOMPLETED'
     | 'TASKEDITED'
     | 'TASKREOPENED'
+    | 'ACTIONABLEMENTIONWHISPER'
     | ValueOf<typeof CONST.REPORT.ACTIONS.TYPE.POLICYCHANGELOG>;
 type OriginalMessageApproved = {
     actionName: typeof CONST.REPORT.ACTIONS.TYPE.APPROVED;
@@ -107,6 +108,18 @@ type OriginalMessageAddComment = {
     };
 };
 
+
+type OriginalMessageActionableWhisper = {
+    actionName: typeof CONST.REPORT.ACTIONS.TYPE.MENTIONWHISPER;
+    originalMessage: {
+        inviteeAccountIDs: number[]
+        inviteeEmails: string
+        lastModified: string
+        reportID: number
+        whisperedTo?: number[]
+    }
+}
+
 type OriginalMessageSubmitted = {
     actionName: typeof CONST.REPORT.ACTIONS.TYPE.SUBMITTED;
     originalMessage: unknown;
@@ -183,11 +196,11 @@ type OriginalMessageRoomChangeLog = {
 
 type OriginalMessagePolicyTask = {
     actionName:
-        | typeof CONST.REPORT.ACTIONS.TYPE.TASKEDITED
-        | typeof CONST.REPORT.ACTIONS.TYPE.TASKCANCELLED
-        | typeof CONST.REPORT.ACTIONS.TYPE.TASKCOMPLETED
-        | typeof CONST.REPORT.ACTIONS.TYPE.TASKREOPENED
-        | typeof CONST.REPORT.ACTIONS.TYPE.MODIFIEDEXPENSE;
+    | typeof CONST.REPORT.ACTIONS.TYPE.TASKEDITED
+    | typeof CONST.REPORT.ACTIONS.TYPE.TASKCANCELLED
+    | typeof CONST.REPORT.ACTIONS.TYPE.TASKCOMPLETED
+    | typeof CONST.REPORT.ACTIONS.TYPE.TASKREOPENED
+    | typeof CONST.REPORT.ACTIONS.TYPE.MODIFIEDEXPENSE;
     originalMessage: unknown;
 };
 
@@ -220,6 +233,7 @@ type OriginalMessage =
     | OriginalMessageApproved
     | OriginalMessageIOU
     | OriginalMessageAddComment
+    | OriginalMessageActionableWhisper
     | OriginalMessageSubmitted
     | OriginalMessageClosed
     | OriginalMessageCreated
@@ -235,4 +249,4 @@ type OriginalMessage =
     | OriginalMessageMoved;
 
 export default OriginalMessage;
-export type {ChronosOOOEvent, Decision, Reaction, ActionName, IOUMessage, Closed, OriginalMessageActionName, ChangeLog, OriginalMessageIOU, OriginalMessageCreated};
+export type { ChronosOOOEvent, Decision, Reaction, ActionName, IOUMessage, Closed, OriginalMessageActionName, ChangeLog, OriginalMessageIOU, OriginalMessageCreated };
