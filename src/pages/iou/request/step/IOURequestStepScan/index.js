@@ -1,6 +1,7 @@
 import lodashGet from 'lodash/get';
 import React, {useCallback, useContext, useReducer, useRef, useState} from 'react';
 import {ActivityIndicator, PanResponder, PixelRatio, View} from 'react-native';
+import {pdfjs} from 'react-pdf';
 import Hand from '@assets/images/hand.svg';
 import ReceiptUpload from '@assets/images/receipt-upload.svg';
 import Shutter from '@assets/images/shutter.svg';
@@ -150,16 +151,31 @@ function IOURequestStepScan({
             return;
         }
 
-        // Store the receipt on the transaction object in Onyx
         const source = URL.createObjectURL(file);
-        IOU.setMoneyRequestReceipt(transactionID, source, file.name, action !== CONST.IOU.ACTION.EDIT);
+        const onSuccess = () => {
+            // Store the receipt on the transaction object in Onyx
+            IOU.setMoneyRequestReceipt(transactionID, source, file.name, action !== CONST.IOU.ACTION.EDIT);
 
-        if (action === CONST.IOU.ACTION.EDIT) {
-            updateScanAndNavigate(file, source);
-            return;
+            if (action === CONST.IOU.ACTION.EDIT) {
+                updateScanAndNavigate(file, source);
+                return;
+            }
+
+            navigateToConfirmationStep();
+        };
+
+        const onError = (e) => {
+            console.error('Error reading PDF', e);
+            setUploadReceiptError(true, 'attachmentPicker.wrongFileType', 'attachmentPicker.notAllowedExtension');
+        };
+
+        const isPdf = pdfjs.isPdfFile(file.name);
+
+        if (isPdf) {
+            pdfjs.getDocument(source).promise.then(onSuccess).catch(onError);
+        } else {
+            onSuccess();
         }
-
-        navigateToConfirmationStep();
     };
 
     const capturePhoto = useCallback(() => {

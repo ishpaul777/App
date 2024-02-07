@@ -2,6 +2,7 @@ import lodashGet from 'lodash/get';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, Alert, AppState, View} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
+import PDF from 'react-native-pdf';
 import {RESULTS} from 'react-native-permissions';
 import Animated, {runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming} from 'react-native-reanimated';
 import {useCameraDevices} from 'react-native-vision-camera';
@@ -18,6 +19,7 @@ import transactionPropTypes from '@components/transactionPropTypes';
 import useLocalize from '@hooks/useLocalize';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
+import useStyleUtils from '@hooks/useStyleUtils';
 import compose from '@libs/compose';
 import * as FileUtils from '@libs/fileDownload/FileUtils';
 import Log from '@libs/Log';
@@ -67,6 +69,9 @@ function IOURequestStepScan({
     const [cameraPermissionStatus, setCameraPermissionStatus] = useState(undefined);
 
     const {translate} = useLocalize();
+
+    const pdfFile = useRef(null);
+    const StyleUtils = useStyleUtils();
 
     const focusIndicatorOpacity = useSharedValue(0);
     const focusIndicatorScale = useSharedValue(2);
@@ -192,15 +197,8 @@ function IOURequestStepScan({
         [transactionID],
     );
 
-    /**
-     * Sets the Receipt objects and navigates the user to the next page
-     * @param {Object} file
-     */
-    const setReceiptAndNavigate = (file) => {
-        if (!validateReceipt(file)) {
-            return;
-        }
-
+    // fires when when pdf is rendered successfully by pdf
+    const onLoadComplete = (file) => {
         // Store the receipt on the transaction object in Onyx
         IOU.setMoneyRequestReceipt(transactionID, file.uri, file.name, action !== CONST.IOU.ACTION.EDIT);
 
@@ -210,6 +208,20 @@ function IOURequestStepScan({
         }
 
         navigateToConfirmationStep();
+        pdfFile.current = null;
+    };
+
+    // fires when when file is picked by user
+    const setReceiptAndNavigate = (file) => {
+        if (!validateReceipt(file)) {
+            return;
+        }
+        const {fileExtension} = FileUtils.splitExtensionFromFileName(lodashGet(file, 'name', ''));
+        if (fileExtension.toLowerCase() === 'pdf') {
+            pdfFile.current = file;
+            return;
+        }
+        onLoadComplete(file);
     };
 
     const capturePhoto = useCallback(() => {
@@ -290,6 +302,17 @@ function IOURequestStepScan({
                         color={theme.textSupporting}
                     />
                 </View>
+            )}
+            {pdfFile.current && (
+                <PDF
+                    source={{uri: pdfFile.uri, cache: true}}
+                    onLoadComplete={onLoadComplete}
+                    onError={() => {
+                        Alert.alert(translate('attachmentPicker.wrongFileType'), translate('attachmentPicker.notAllowedExtension'));
+                        pdfFile.current = null;
+                    }}
+                    style={StyleUtils.getWidthAndHeightStyle(1, 1)}
+                />
             )}
             {cameraPermissionStatus === RESULTS.GRANTED && device != null && (
                 <View style={[styles.cameraView]}>
