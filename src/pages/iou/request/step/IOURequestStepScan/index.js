@@ -1,7 +1,8 @@
 import lodashGet from 'lodash/get';
-import React, {useCallback, useContext, useReducer, useRef, useState} from 'react';
-import {ActivityIndicator, PanResponder, PixelRatio, View} from 'react-native';
-import {pdfjs} from 'react-pdf';
+import React, { useCallback, useContext, useReducer, useRef, useState } from 'react';
+import { ActivityIndicator, PanResponder, PixelRatio, View } from 'react-native';
+import { pdfjs } from 'react-pdf';
+import pdfWorkerSource from 'pdfjs-dist/legacy/build/pdf.worker';
 import Hand from '@assets/images/hand.svg';
 import ReceiptUpload from '@assets/images/receipt-upload.svg';
 import Shutter from '@assets/images/shutter.svg';
@@ -9,7 +10,7 @@ import AttachmentPicker from '@components/AttachmentPicker';
 import Button from '@components/Button';
 import ConfirmModal from '@components/ConfirmModal';
 import CopyTextToClipboard from '@components/CopyTextToClipboard';
-import {DragAndDropContext} from '@components/DragAndDrop/Provider';
+import { DragAndDropContext } from '@components/DragAndDrop/Provider';
 import Icon from '@components/Icon';
 import * as Expensicons from '@components/Icon/Expensicons';
 import PressableWithFeedback from '@components/Pressable/PressableWithFeedback';
@@ -54,9 +55,9 @@ const defaultProps = {
 function IOURequestStepScan({
     report,
     route: {
-        params: {action, iouType, reportID, transactionID, backTo},
+        params: { action, iouType, reportID, transactionID, backTo },
     },
-    transaction: {isFromGlobalCreate},
+    transaction: { isFromGlobalCreate },
 }) {
     const theme = useTheme();
     const styles = useThemeStyles();
@@ -67,14 +68,20 @@ function IOURequestStepScan({
     const [attachmentInvalidReason, setAttachmentValidReason] = useState('');
 
     const [receiptImageTopPosition, setReceiptImageTopPosition] = useState(0);
-    const {isSmallScreenWidth} = useWindowDimensions();
-    const {translate} = useLocalize();
-    const {isDraggingOver} = useContext(DragAndDropContext);
+    const { isSmallScreenWidth } = useWindowDimensions();
+    const { translate } = useLocalize();
+    const { isDraggingOver } = useContext(DragAndDropContext);
 
     const [cameraPermissionState, setCameraPermissionState] = useState('prompt');
     const [isFlashLightOn, toggleFlashlight] = useReducer((state) => !state, false);
     const [isTorchAvailable, setIsTorchAvailable] = useState(false);
     const cameraRef = useRef(null);
+
+    const workerURL = URL.createObjectURL(new Blob([pdfWorkerSource], { type: 'text/javascript' }));
+
+    if (pdfjs.GlobalWorkerOptions.workerSrc !== workerURL) {
+        pdfjs.GlobalWorkerOptions.workerSrc = workerURL;
+    }
 
     const hideRecieptModal = () => {
         setIsAttachmentInvalid(false);
@@ -93,7 +100,7 @@ function IOURequestStepScan({
     };
 
     function validateReceipt(file) {
-        const {fileExtension} = FileUtils.splitExtensionFromFileName(lodashGet(file, 'name', ''));
+        const { fileExtension } = FileUtils.splitExtensionFromFileName(lodashGet(file, 'name', ''));
         if (!CONST.API_ATTACHMENT_VALIDATIONS.ALLOWED_RECEIPT_EXTENSIONS.includes(fileExtension.toLowerCase())) {
             setUploadReceiptError(true, 'attachmentPicker.wrongFileType', 'attachmentPicker.notAllowedExtension');
             return false;
@@ -227,10 +234,10 @@ function IOURequestStepScan({
                 <NavigationAwareCamera
                     onUserMedia={() => setCameraPermissionState('granted')}
                     onUserMediaError={() => setCameraPermissionState('denied')}
-                    style={{...styles.videoContainer, display: cameraPermissionState !== 'granted' ? 'none' : 'block'}}
+                    style={{ ...styles.videoContainer, display: cameraPermissionState !== 'granted' ? 'none' : 'block' }}
                     ref={cameraRef}
                     screenshotFormat="image/png"
-                    videoConstraints={{facingMode: {exact: 'environment'}}}
+                    videoConstraints={{ facingMode: { exact: 'environment' } }}
                     torchOn={isFlashLightOn}
                     onTorchAvailability={setIsTorchAvailable}
                     forceScreenshotSourceSize
@@ -240,7 +247,7 @@ function IOURequestStepScan({
 
             <View style={[styles.flexRow, styles.justifyContentAround, styles.alignItemsCenter, styles.pv3]}>
                 <AttachmentPicker>
-                    {({openPicker}) => (
+                    {({ openPicker }) => (
                         <PressableWithFeedback
                             accessibilityLabel={translate('receipt.chooseFile')}
                             role={CONST.ACCESSIBILITY_ROLE.BUTTON}
@@ -290,7 +297,7 @@ function IOURequestStepScan({
 
     const desktopUploadView = () => (
         <>
-            <View onLayout={({nativeEvent}) => setReceiptImageTopPosition(PixelRatio.roundToNearestPixel(nativeEvent.layout.top))}>
+            <View onLayout={({ nativeEvent }) => setReceiptImageTopPosition(PixelRatio.roundToNearestPixel(nativeEvent.layout.top))}>
                 <ReceiptUpload
                     width={CONST.RECEIPT.ICON_SIZE}
                     height={CONST.RECEIPT.ICON_SIZE}
@@ -314,7 +321,7 @@ function IOURequestStepScan({
             </View>
 
             <AttachmentPicker>
-                {({openPicker}) => (
+                {({ openPicker }) => (
                     <Button
                         medium
                         success
