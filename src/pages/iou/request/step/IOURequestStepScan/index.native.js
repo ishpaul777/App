@@ -72,7 +72,7 @@ function IOURequestStepScan({
     const {translate} = useLocalize();
 
 
-    const pdfFile = useRef(null);
+    const [pdfFile, setPdfFile] = useState(null);
     const StyleUtils = useStyleUtils();
 
     const askForPermissions = (showPermissionsAlert = true) => {
@@ -219,7 +219,7 @@ function IOURequestStepScan({
         }
 
         navigateToConfirmationStep();
-        pdfFile.current = null;
+        setPdfFile(null);
     };
 
     // fires when when file is picked by user
@@ -229,7 +229,7 @@ function IOURequestStepScan({
         }
         const {fileExtension} = FileUtils.splitExtensionFromFileName(lodashGet(file, 'name', ''));
         if (fileExtension.toLowerCase() === 'pdf') {
-            pdfFile.current = file;
+            setPdfFile(file);
             return;
         }
         onLoadComplete(file);
@@ -319,13 +319,13 @@ function IOURequestStepScan({
                     />
                 </View>
             )}
-            {pdfFile.current && (
+            {pdfFile && (
                 <PDF
-                    source={{uri: pdfFile.uri, cache: true}}
+                    source={{uri: pdfFile.uri, cache: false}}
                     onLoadComplete={onLoadComplete}
                     onError={() => {
                         Alert.alert(translate('attachmentPicker.wrongFileType'), translate('attachmentPicker.notAllowedExtension'));
-                        pdfFile.current = null;
+                        setPdfFile(null);
                     }}
                     style={StyleUtils.getWidthAndHeightStyle(1, 1)}
                 />
