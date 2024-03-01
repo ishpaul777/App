@@ -361,7 +361,7 @@ function MenuItem(
             processedTitle = html;
         }
 
-        return processedTitle ? `<comment>${processedTitle}</comment>` : '';
+        return processedTitle ? `<comment><text line="${numberOfLinesTitle}">${processedTitle}</text></comment>` : '';
     }, [title, shouldRenderAsHTML, shouldParseTitle, html]);
 
     const hasPressableRightComponent = iconRight || (shouldShowRightComponent && rightComponent);
