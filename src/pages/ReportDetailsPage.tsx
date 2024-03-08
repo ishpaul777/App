@@ -254,6 +254,7 @@ function ReportDetailsPage({policies, report, session, personalDetails}: ReportD
                                 interactive={canEditReportDescription}
                                 title={report.description}
                                 shouldRenderAsHTML
+                                numberOfLinesTitle={3}
                                 shouldCheckActionAllowedOnPress={false}
                                 description={translate('reportDescriptionPage.roomDescription')}
                                 onPress={() => Navigation.navigate(ROUTES.REPORT_DESCRIPTION.getRoute(report.reportID))}

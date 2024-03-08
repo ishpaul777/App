@@ -52,6 +52,7 @@ function BaseHTMLEngineProvider({textSelectable = false, children, enableExperim
                 mixedUAStyles: {whiteSpace: 'normal'},
                 contentModel: HTMLContentModel.block,
             }),
+            text: HTMLElementModel.fromCustomModel({tagName: 'text', contentModel: HTMLContentModel.textual}),
             strong: HTMLElementModel.fromCustomModel({
                 tagName: 'strong',
                 mixedUAStyles: {whiteSpace: 'pre'},

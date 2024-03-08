@@ -7,6 +7,7 @@ import MentionHereRenderer from './MentionHereRenderer';
 import MentionUserRenderer from './MentionUserRenderer';
 import NextStepEmailRenderer from './NextStepEmailRenderer';
 import PreRenderer from './PreRenderer';
+import TextRenderer from './TextRenderer';
 import VideoRenderer from './VideoRenderer';
 
 /**
@@ -27,6 +28,8 @@ const HTMLEngineProviderComponentList: CustomTagRendererRecord = {
     'mention-here': MentionHereRenderer,
     'next-step-email': NextStepEmailRenderer,
     /* eslint-enable @typescript-eslint/naming-convention */
+
+    text: TextRenderer,
 };
 
 export default HTMLEngineProviderComponentList;
