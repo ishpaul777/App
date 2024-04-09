@@ -1,10 +1,10 @@
 import lodashIsEqual from 'lodash/isEqual';
-import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { GestureResponderEvent, TextInput } from 'react-native';
-import { InteractionManager, View } from 'react-native';
-import type { OnyxCollection, OnyxEntry } from 'react-native-onyx';
-import { withOnyx } from 'react-native-onyx';
-import type { Emoji } from '@assets/emojis/types';
+import React, {memo, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import type {GestureResponderEvent, TextInput} from 'react-native';
+import {InteractionManager, View} from 'react-native';
+import type {OnyxCollection, OnyxEntry} from 'react-native-onyx';
+import {withOnyx} from 'react-native-onyx';
+import type {Emoji} from '@assets/emojis/types';
 import Button from '@components/Button';
 import DisplayNames from '@components/DisplayNames';
 import Hoverable from '@components/Hoverable';
@@ -13,11 +13,11 @@ import * as Expensicons from '@components/Icon/Expensicons';
 import InlineSystemMessage from '@components/InlineSystemMessage';
 import KYCWall from '@components/KYCWall';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
-import { useBlockedFromConcierge, usePersonalDetails, useReportActionsDrafts } from '@components/OnyxProvider';
+import {useBlockedFromConcierge, usePersonalDetails, useReportActionsDrafts} from '@components/OnyxProvider';
 import PressableWithSecondaryInteraction from '@components/PressableWithSecondaryInteraction';
 import ReportActionItemEmojiReactions from '@components/Reactions/ReportActionItemEmojiReactions';
 import RenderHTML from '@components/RenderHTML';
-import type { ActionableItem } from '@components/ReportActionItem/ActionableItemButtons';
+import type {ActionableItem} from '@components/ReportActionItem/ActionableItemButtons';
 import ActionableItemButtons from '@components/ReportActionItem/ActionableItemButtons';
 import ChronosOOOListActions from '@components/ReportActionItem/ChronosOOOListActions';
 import MoneyReportView from '@components/ReportActionItem/MoneyReportView';
@@ -28,7 +28,7 @@ import ReportPreview from '@components/ReportActionItem/ReportPreview';
 import TaskAction from '@components/ReportActionItem/TaskAction';
 import TaskPreview from '@components/ReportActionItem/TaskPreview';
 import TaskView from '@components/ReportActionItem/TaskView';
-import { ShowContextMenuContext } from '@components/ShowContextMenuContext';
+import {ShowContextMenuContext} from '@components/ShowContextMenuContext';
 import Text from '@components/Text';
 import UnreadActionIndicator from '@components/UnreadActionIndicator';
 import useLocalize from '@hooks/useLocalize';
@@ -50,7 +50,7 @@ import * as ReportActionsUtils from '@libs/ReportActionsUtils';
 import * as ReportUtils from '@libs/ReportUtils';
 import SelectionScraper from '@libs/SelectionScraper';
 import * as TransactionUtils from '@libs/TransactionUtils';
-import { ReactionListContext } from '@pages/home/ReportScreenContext';
+import {ReactionListContext} from '@pages/home/ReportScreenContext';
 import * as BankAccounts from '@userActions/BankAccounts';
 import * as EmojiPickerAction from '@userActions/EmojiPickerAction';
 import * as Policy from '@userActions/Policy';
@@ -59,16 +59,16 @@ import * as ReportActions from '@userActions/ReportActions';
 import * as Session from '@userActions/Session';
 import * as User from '@userActions/User';
 import CONST from '@src/CONST';
-import type { TranslationPaths } from '@src/languages/types';
+import type {TranslationPaths} from '@src/languages/types';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type * as OnyxTypes from '@src/types/onyx';
-import type { OriginalMessageActionableMentionWhisper, OriginalMessageJoinPolicyChangeLog } from '@src/types/onyx/OriginalMessage';
-import { isEmptyObject } from '@src/types/utils/EmptyObject';
+import type {OriginalMessageActionableMentionWhisper, OriginalMessageJoinPolicyChangeLog} from '@src/types/onyx/OriginalMessage';
+import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import AnimatedEmptyStateBackground from './AnimatedEmptyStateBackground';
 import MiniReportActionContextMenu from './ContextMenu/MiniReportActionContextMenu';
 import * as ReportActionContextMenu from './ContextMenu/ReportActionContextMenu';
-import { hideContextMenu } from './ContextMenu/ReportActionContextMenu';
+import {hideContextMenu} from './ContextMenu/ReportActionContextMenu';
 import LinkPreviewer from './LinkPreviewer';
 import ReportActionItemBasicMessage from './ReportActionItemBasicMessage';
 import ReportActionItemCreated from './ReportActionItemCreated';
@@ -177,8 +177,8 @@ function ReportActionItem({
     transaction,
     onPress = undefined,
 }: ReportActionItemProps) {
-    const { translate } = useLocalize();
-    const { isSmallScreenWidth } = useWindowDimensions();
+    const {translate} = useLocalize();
+    const {isSmallScreenWidth} = useWindowDimensions();
     const blockedFromConcierge = useBlockedFromConcierge();
     const reportActionDrafts = useReportActionsDrafts();
     const draftMessage = useMemo(() => getDraftMessage(reportActionDrafts, report.reportID, action), [action, report.reportID, reportActionDrafts]);
@@ -192,7 +192,7 @@ function ReportActionItem({
     const [isHidden, setIsHidden] = useState(false);
     const [moderationDecision, setModerationDecision] = useState<OnyxTypes.DecisionName>(CONST.MODERATION.MODERATOR_DECISION_APPROVED);
     const reactionListRef = useContext(ReactionListContext);
-    const { updateHiddenAttachments } = useContext(ReportAttachmentsContext);
+    const {updateHiddenAttachments} = useContext(ReportAttachmentsContext);
     const textInputRef = useRef<TextInput & HTMLTextAreaElement>();
     const popoverAnchorRef = useRef<Exclude<ReportActionContextMenu.ContextMenuAnchor, TextInput>>(null);
     const downloadedPreviews = useRef<string[]>([]);
@@ -493,7 +493,7 @@ function ReportActionItem({
             const missingPaymentMethod = ReportUtils.getIndicatedMissingPaymentMethod(userWallet, report.reportID, action);
             children = (
                 <ReportActionItemBasicMessage
-                    message={translate(paymentType === CONST.IOU.PAYMENT_TYPE.EXPENSIFY ? 'iou.waitingOnEnabledWallet' : 'iou.waitingOnBankAccount', { submitterDisplayName })}
+                    message={translate(paymentType === CONST.IOU.PAYMENT_TYPE.EXPENSIFY ? 'iou.waitingOnEnabledWallet' : 'iou.waitingOnBankAccount', {submitterDisplayName})}
                 >
                     <>
                         {missingPaymentMethod === 'bankAccount' && (
@@ -565,7 +565,7 @@ function ReportActionItem({
                                 >
                                     <Text
                                         style={[styles.buttonSmallText, styles.userSelectNone]}
-                                        dataSet={{ [CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true }}
+                                        dataSet={{[CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true}}
                                     >
                                         {isHidden ? translate('moderation.revealMessage') : translate('moderation.hideMessage')}
                                     </Text>
@@ -928,71 +928,75 @@ export default withOnyx<ReportActionItemPropsWithoutTransaction, ReportActionIte
         initialValue: CONST.EMOJI_DEFAULT_SKIN_TONE,
     },
     iouReport: {
-        key: ({ action }) => {
+        key: ({action}) => {
             const iouReportID = ReportActionsUtils.getIOUReportIDFromReportActionPreview(action);
             return `${ONYXKEYS.COLLECTION.REPORT}${iouReportID ?? 0}`;
         },
         initialValue: {} as OnyxTypes.Report,
     },
     policy: {
-        key: ({ report }) => `${ONYXKEYS.COLLECTION.POLICY}${report.policyID ?? 0}`,
+        key: ({report}) => `${ONYXKEYS.COLLECTION.POLICY}${report.policyID ?? 0}`,
         initialValue: {} as OnyxTypes.Policy,
     },
     emojiReactions: {
-        key: ({ action }) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS_REACTIONS}${action.reportActionID}`,
+        key: ({action}) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS_REACTIONS}${action.reportActionID}`,
         initialValue: {},
     },
     userWallet: {
         key: ONYXKEYS.USER_WALLET,
     },
     parentReportActions: {
-        key: ({ report }) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report ? report.reportID : '0'}`,
+        key: ({report}) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report ? report.reportID : '0'}`,
         canEvict: false,
     },
 })(
     withOnyx<ReportActionItemProps, ReportActionItemOnyxPropsWithTransaction>({
         transaction: {
-            key: ({ transactionThreadReport, parentReportActions: allReportActions }) => {
+            key: ({transactionThreadReport, parentReportActions: allReportActions}) => {
                 const parentReportActionID = isEmptyObject(transactionThreadReport) ? '0' : transactionThreadReport.parentReportActionID;
                 const action = allReportActions?.[parentReportActionID ?? '0'];
-                const transactionID = (action as OnyxTypes.OriginalMessageIOU)?.originalMessage.IOUTransactionID ? (action as OnyxTypes.OriginalMessageIOU).originalMessage.IOUTransactionID : 0;
+                const transactionID = (action as OnyxTypes.OriginalMessageIOU)?.originalMessage.IOUTransactionID
+                    ? (action as OnyxTypes.OriginalMessageIOU).originalMessage.IOUTransactionID
+                    : 0;
                 return `${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`;
             },
-        }
-    })(memo(ReportActionItem, (prevProps, nextProps) => {
-        const prevParentReportAction = prevProps.parentReportAction;
-        const nextParentReportAction = nextProps.parentReportAction;
-        return (
-            prevProps.displayAsGroup === nextProps.displayAsGroup &&
-            prevProps.isMostRecentIOUReportAction === nextProps.isMostRecentIOUReportAction &&
-            prevProps.shouldDisplayNewMarker === nextProps.shouldDisplayNewMarker &&
-            lodashIsEqual(prevProps.emojiReactions, nextProps.emojiReactions) &&
-            lodashIsEqual(prevProps.action, nextProps.action) &&
-            lodashIsEqual(prevProps.iouReport, nextProps.iouReport) &&
-            lodashIsEqual(prevProps.report.pendingFields, nextProps.report.pendingFields) &&
-            lodashIsEqual(prevProps.report.isDeletedParentAction, nextProps.report.isDeletedParentAction) &&
-            lodashIsEqual(prevProps.report.errorFields, nextProps.report.errorFields) &&
-            prevProps.report?.statusNum === nextProps.report?.statusNum &&
-            prevProps.report?.stateNum === nextProps.report?.stateNum &&
-            prevProps.report?.parentReportID === nextProps.report?.parentReportID &&
-            prevProps.report?.parentReportActionID === nextProps.report?.parentReportActionID &&
-            // TaskReport's created actions render the TaskView, which updates depending on certain fields in the TaskReport
-            ReportUtils.isTaskReport(prevProps.report) === ReportUtils.isTaskReport(nextProps.report) &&
-            prevProps.action.actionName === nextProps.action.actionName &&
-            prevProps.report.reportName === nextProps.report.reportName &&
-            prevProps.report.description === nextProps.report.description &&
-            ReportUtils.isCompletedTaskReport(prevProps.report) === ReportUtils.isCompletedTaskReport(nextProps.report) &&
-            prevProps.report.managerID === nextProps.report.managerID &&
-            prevProps.shouldHideThreadDividerLine === nextProps.shouldHideThreadDividerLine &&
-            prevProps.report?.total === nextProps.report?.total &&
-            prevProps.report?.nonReimbursableTotal === nextProps.report?.nonReimbursableTotal &&
-            prevProps.linkedReportActionID === nextProps.linkedReportActionID &&
-            lodashIsEqual(prevProps.report.fieldList, nextProps.report.fieldList) &&
-            lodashIsEqual(prevProps.policy, nextProps.policy) &&
-            lodashIsEqual(prevProps.transactionThreadReport, nextProps.transactionThreadReport) &&
-            lodashIsEqual(prevProps.reportActions, nextProps.reportActions) &&
-            lodashIsEqual(prevProps.transaction, nextProps.transaction) &&
-            lodashIsEqual(prevParentReportAction, nextParentReportAction)
-        );
-    }),)
+        },
+    })(
+        memo(ReportActionItem, (prevProps, nextProps) => {
+            const prevParentReportAction = prevProps.parentReportAction;
+            const nextParentReportAction = nextProps.parentReportAction;
+            return (
+                prevProps.displayAsGroup === nextProps.displayAsGroup &&
+                prevProps.isMostRecentIOUReportAction === nextProps.isMostRecentIOUReportAction &&
+                prevProps.shouldDisplayNewMarker === nextProps.shouldDisplayNewMarker &&
+                lodashIsEqual(prevProps.emojiReactions, nextProps.emojiReactions) &&
+                lodashIsEqual(prevProps.action, nextProps.action) &&
+                lodashIsEqual(prevProps.iouReport, nextProps.iouReport) &&
+                lodashIsEqual(prevProps.report.pendingFields, nextProps.report.pendingFields) &&
+                lodashIsEqual(prevProps.report.isDeletedParentAction, nextProps.report.isDeletedParentAction) &&
+                lodashIsEqual(prevProps.report.errorFields, nextProps.report.errorFields) &&
+                prevProps.report?.statusNum === nextProps.report?.statusNum &&
+                prevProps.report?.stateNum === nextProps.report?.stateNum &&
+                prevProps.report?.parentReportID === nextProps.report?.parentReportID &&
+                prevProps.report?.parentReportActionID === nextProps.report?.parentReportActionID &&
+                // TaskReport's created actions render the TaskView, which updates depending on certain fields in the TaskReport
+                ReportUtils.isTaskReport(prevProps.report) === ReportUtils.isTaskReport(nextProps.report) &&
+                prevProps.action.actionName === nextProps.action.actionName &&
+                prevProps.report.reportName === nextProps.report.reportName &&
+                prevProps.report.description === nextProps.report.description &&
+                ReportUtils.isCompletedTaskReport(prevProps.report) === ReportUtils.isCompletedTaskReport(nextProps.report) &&
+                prevProps.report.managerID === nextProps.report.managerID &&
+                prevProps.shouldHideThreadDividerLine === nextProps.shouldHideThreadDividerLine &&
+                prevProps.report?.total === nextProps.report?.total &&
+                prevProps.report?.nonReimbursableTotal === nextProps.report?.nonReimbursableTotal &&
+                prevProps.linkedReportActionID === nextProps.linkedReportActionID &&
+                lodashIsEqual(prevProps.report.fieldList, nextProps.report.fieldList) &&
+                lodashIsEqual(prevProps.policy, nextProps.policy) &&
+                lodashIsEqual(prevProps.transactionThreadReport, nextProps.transactionThreadReport) &&
+                lodashIsEqual(prevProps.reportActions, nextProps.reportActions) &&
+                lodashIsEqual(prevProps.transaction, nextProps.transaction) &&
+                lodashIsEqual(prevParentReportAction, nextParentReportAction)
+            );
+        }),
+    ),
 );
