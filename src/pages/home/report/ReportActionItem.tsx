@@ -1,10 +1,10 @@
 import lodashIsEqual from 'lodash/isEqual';
-import React, {memo, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
-import type {GestureResponderEvent, TextInput} from 'react-native';
-import {InteractionManager, View} from 'react-native';
-import type {OnyxCollection, OnyxEntry} from 'react-native-onyx';
-import {withOnyx} from 'react-native-onyx';
-import type {Emoji} from '@assets/emojis/types';
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import type { GestureResponderEvent, TextInput } from 'react-native';
+import { InteractionManager, View } from 'react-native';
+import type { OnyxCollection, OnyxEntry } from 'react-native-onyx';
+import { withOnyx } from 'react-native-onyx';
+import type { Emoji } from '@assets/emojis/types';
 import Button from '@components/Button';
 import DisplayNames from '@components/DisplayNames';
 import Hoverable from '@components/Hoverable';
@@ -13,11 +13,11 @@ import * as Expensicons from '@components/Icon/Expensicons';
 import InlineSystemMessage from '@components/InlineSystemMessage';
 import KYCWall from '@components/KYCWall';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
-import {useBlockedFromConcierge, usePersonalDetails, useReportActionsDrafts} from '@components/OnyxProvider';
+import { useBlockedFromConcierge, usePersonalDetails, useReportActionsDrafts } from '@components/OnyxProvider';
 import PressableWithSecondaryInteraction from '@components/PressableWithSecondaryInteraction';
 import ReportActionItemEmojiReactions from '@components/Reactions/ReportActionItemEmojiReactions';
 import RenderHTML from '@components/RenderHTML';
-import type {ActionableItem} from '@components/ReportActionItem/ActionableItemButtons';
+import type { ActionableItem } from '@components/ReportActionItem/ActionableItemButtons';
 import ActionableItemButtons from '@components/ReportActionItem/ActionableItemButtons';
 import ChronosOOOListActions from '@components/ReportActionItem/ChronosOOOListActions';
 import MoneyReportView from '@components/ReportActionItem/MoneyReportView';
@@ -28,7 +28,7 @@ import ReportPreview from '@components/ReportActionItem/ReportPreview';
 import TaskAction from '@components/ReportActionItem/TaskAction';
 import TaskPreview from '@components/ReportActionItem/TaskPreview';
 import TaskView from '@components/ReportActionItem/TaskView';
-import {ShowContextMenuContext} from '@components/ShowContextMenuContext';
+import { ShowContextMenuContext } from '@components/ShowContextMenuContext';
 import Text from '@components/Text';
 import UnreadActionIndicator from '@components/UnreadActionIndicator';
 import useLocalize from '@hooks/useLocalize';
@@ -50,7 +50,7 @@ import * as ReportActionsUtils from '@libs/ReportActionsUtils';
 import * as ReportUtils from '@libs/ReportUtils';
 import SelectionScraper from '@libs/SelectionScraper';
 import * as TransactionUtils from '@libs/TransactionUtils';
-import {ReactionListContext} from '@pages/home/ReportScreenContext';
+import { ReactionListContext } from '@pages/home/ReportScreenContext';
 import * as BankAccounts from '@userActions/BankAccounts';
 import * as EmojiPickerAction from '@userActions/EmojiPickerAction';
 import * as Policy from '@userActions/Policy';
@@ -59,16 +59,16 @@ import * as ReportActions from '@userActions/ReportActions';
 import * as Session from '@userActions/Session';
 import * as User from '@userActions/User';
 import CONST from '@src/CONST';
-import type {TranslationPaths} from '@src/languages/types';
+import type { TranslationPaths } from '@src/languages/types';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type * as OnyxTypes from '@src/types/onyx';
-import type {OriginalMessageActionableMentionWhisper, OriginalMessageJoinPolicyChangeLog} from '@src/types/onyx/OriginalMessage';
-import {isEmptyObject} from '@src/types/utils/EmptyObject';
+import type { OriginalMessageActionableMentionWhisper, OriginalMessageJoinPolicyChangeLog } from '@src/types/onyx/OriginalMessage';
+import { isEmptyObject } from '@src/types/utils/EmptyObject';
 import AnimatedEmptyStateBackground from './AnimatedEmptyStateBackground';
 import MiniReportActionContextMenu from './ContextMenu/MiniReportActionContextMenu';
 import * as ReportActionContextMenu from './ContextMenu/ReportActionContextMenu';
-import {hideContextMenu} from './ContextMenu/ReportActionContextMenu';
+import { hideContextMenu } from './ContextMenu/ReportActionContextMenu';
 import LinkPreviewer from './LinkPreviewer';
 import ReportActionItemBasicMessage from './ReportActionItemBasicMessage';
 import ReportActionItemCreated from './ReportActionItemCreated';
@@ -87,7 +87,12 @@ const getDraftMessage = (drafts: OnyxCollection<OnyxTypes.ReportActionsDrafts>, 
     return typeof draftMessage === 'string' ? draftMessage : draftMessage?.message;
 };
 
-type ReportActionItemOnyxProps = {
+type ReportActionItemOnyxPropsWithTransaction = {
+    /** Transaction for this report */
+    transaction: OnyxEntry<OnyxTypes.Transaction>;
+};
+
+type ReportActionItemOnyxPropsWithoutTransaction = {
     /** Stores user's preferred skin tone */
     preferredSkinTone: OnyxEntry<string | number>;
 
@@ -102,11 +107,11 @@ type ReportActionItemOnyxProps = {
     /** The policy which the user has access to and which the report is tied to */
     policy: OnyxEntry<OnyxTypes.Policy>;
 
-    /** Transaction associated with this report, if any */
-    transaction: OnyxEntry<OnyxTypes.Transaction>;
+    /** All of the actions of the report */
+    parentReportActions: OnyxEntry<OnyxTypes.ReportActions>;
 };
 
-type ReportActionItemProps = {
+type ReportActionItemPropsWithoutTransaction = {
     /** Report for this action */
     report: OnyxTypes.Report;
 
@@ -145,7 +150,9 @@ type ReportActionItemProps = {
 
     /** Callback to be called on onPress */
     onPress?: () => void;
-} & ReportActionItemOnyxProps;
+} & ReportActionItemOnyxPropsWithoutTransaction;
+
+type ReportActionItemProps = ReportActionItemPropsWithoutTransaction & ReportActionItemOnyxPropsWithTransaction;
 
 const isIOUReport = (actionObj: OnyxEntry<OnyxTypes.ReportAction>): actionObj is OnyxTypes.ReportActionBase & OnyxTypes.OriginalMessageIOU =>
     actionObj?.actionName === CONST.REPORT.ACTIONS.TYPE.IOU;
@@ -170,8 +177,8 @@ function ReportActionItem({
     transaction,
     onPress = undefined,
 }: ReportActionItemProps) {
-    const {translate} = useLocalize();
-    const {isSmallScreenWidth} = useWindowDimensions();
+    const { translate } = useLocalize();
+    const { isSmallScreenWidth } = useWindowDimensions();
     const blockedFromConcierge = useBlockedFromConcierge();
     const reportActionDrafts = useReportActionsDrafts();
     const draftMessage = useMemo(() => getDraftMessage(reportActionDrafts, report.reportID, action), [action, report.reportID, reportActionDrafts]);
@@ -185,7 +192,7 @@ function ReportActionItem({
     const [isHidden, setIsHidden] = useState(false);
     const [moderationDecision, setModerationDecision] = useState<OnyxTypes.DecisionName>(CONST.MODERATION.MODERATOR_DECISION_APPROVED);
     const reactionListRef = useContext(ReactionListContext);
-    const {updateHiddenAttachments} = useContext(ReportAttachmentsContext);
+    const { updateHiddenAttachments } = useContext(ReportAttachmentsContext);
     const textInputRef = useRef<TextInput & HTMLTextAreaElement>();
     const popoverAnchorRef = useRef<Exclude<ReportActionContextMenu.ContextMenuAnchor, TextInput>>(null);
     const downloadedPreviews = useRef<string[]>([]);
@@ -486,7 +493,7 @@ function ReportActionItem({
             const missingPaymentMethod = ReportUtils.getIndicatedMissingPaymentMethod(userWallet, report.reportID, action);
             children = (
                 <ReportActionItemBasicMessage
-                    message={translate(paymentType === CONST.IOU.PAYMENT_TYPE.EXPENSIFY ? 'iou.waitingOnEnabledWallet' : 'iou.waitingOnBankAccount', {submitterDisplayName})}
+                    message={translate(paymentType === CONST.IOU.PAYMENT_TYPE.EXPENSIFY ? 'iou.waitingOnEnabledWallet' : 'iou.waitingOnBankAccount', { submitterDisplayName })}
                 >
                     <>
                         {missingPaymentMethod === 'bankAccount' && (
@@ -558,7 +565,7 @@ function ReportActionItem({
                                 >
                                     <Text
                                         style={[styles.buttonSmallText, styles.userSelectNone]}
-                                        dataSet={{[CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true}}
+                                        dataSet={{ [CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true }}
                                     >
                                         {isHidden ? translate('moderation.revealMessage') : translate('moderation.hideMessage')}
                                     </Text>
@@ -915,39 +922,44 @@ function ReportActionItem({
     );
 }
 
-export default withOnyx<ReportActionItemProps, ReportActionItemOnyxProps>({
+export default withOnyx<ReportActionItemPropsWithoutTransaction, ReportActionItemOnyxPropsWithoutTransaction>({
     preferredSkinTone: {
         key: ONYXKEYS.PREFERRED_EMOJI_SKIN_TONE,
         initialValue: CONST.EMOJI_DEFAULT_SKIN_TONE,
     },
     iouReport: {
-        key: ({action}) => {
+        key: ({ action }) => {
             const iouReportID = ReportActionsUtils.getIOUReportIDFromReportActionPreview(action);
             return `${ONYXKEYS.COLLECTION.REPORT}${iouReportID ?? 0}`;
         },
         initialValue: {} as OnyxTypes.Report,
     },
     policy: {
-        key: ({report}) => `${ONYXKEYS.COLLECTION.POLICY}${report.policyID ?? 0}`,
+        key: ({ report }) => `${ONYXKEYS.COLLECTION.POLICY}${report.policyID ?? 0}`,
         initialValue: {} as OnyxTypes.Policy,
     },
     emojiReactions: {
-        key: ({action}) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS_REACTIONS}${action.reportActionID}`,
+        key: ({ action }) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS_REACTIONS}${action.reportActionID}`,
         initialValue: {},
     },
     userWallet: {
         key: ONYXKEYS.USER_WALLET,
     },
-    transaction: {
-        key: ({transactionThreadReport, reportActions}) => {
-            const parentReportActionID = isEmptyObject(transactionThreadReport) ? '0' : transactionThreadReport.parentReportActionID;
-            const action = reportActions?.find((reportAction) => reportAction.reportActionID === parentReportActionID);
-            const transactionID = (action as OnyxTypes.OriginalMessageIOU)?.originalMessage.IOUTransactionID ? (action as OnyxTypes.OriginalMessageIOU).originalMessage.IOUTransactionID : 0;
-            return `${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`;
-        },
+    parentReportActions: {
+        key: ({ report }) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report ? report.reportID : '0'}`,
+        canEvict: false,
     },
 })(
-    memo(ReportActionItem, (prevProps, nextProps) => {
+    withOnyx<ReportActionItemProps, ReportActionItemOnyxPropsWithTransaction>({
+        transaction: {
+            key: ({ transactionThreadReport, parentReportActions: allReportActions }) => {
+                const parentReportActionID = isEmptyObject(transactionThreadReport) ? '0' : transactionThreadReport.parentReportActionID;
+                const action = allReportActions?.[parentReportActionID ?? '0'];
+                const transactionID = (action as OnyxTypes.OriginalMessageIOU)?.originalMessage.IOUTransactionID ? (action as OnyxTypes.OriginalMessageIOU).originalMessage.IOUTransactionID : 0;
+                return `${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`;
+            },
+        }
+    })(memo(ReportActionItem, (prevProps, nextProps) => {
         const prevParentReportAction = prevProps.parentReportAction;
         const nextParentReportAction = nextProps.parentReportAction;
         return (
@@ -982,5 +994,5 @@ export default withOnyx<ReportActionItemProps, ReportActionItemOnyxProps>({
             lodashIsEqual(prevProps.transaction, nextProps.transaction) &&
             lodashIsEqual(prevParentReportAction, nextParentReportAction)
         );
-    }),
+    }),)
 );
