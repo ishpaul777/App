@@ -73,12 +73,6 @@ type PopoverMenuProps = Partial<PopoverModalProps> & {
 
     /** Whether we want to show the popover on the right side of the screen */
     fromSidebarMediumScreen?: boolean;
-
-    /**
-     * Whether the modal should enable the new focus manager.
-     * We are attempting to migrate to a new refocus manager, adding this property for gradual migration.
-     * */
-    shouldEnableNewFocusManagement?: boolean;
 };
 
 function PopoverMenu({
@@ -100,7 +94,6 @@ function PopoverMenu({
     disableAnimation = true,
     withoutOverlay = false,
     shouldSetModalVisibility = true,
-    shouldEnableNewFocusManagement,
 }: PopoverMenuProps) {
     const styles = useThemeStyles();
     const theme = useTheme();
@@ -208,7 +201,6 @@ function PopoverMenu({
             fromSidebarMediumScreen={fromSidebarMediumScreen}
             withoutOverlay={withoutOverlay}
             shouldSetModalVisibility={shouldSetModalVisibility}
-            shouldEnableNewFocusManagement={shouldEnableNewFocusManagement}
         >
             <View style={isSmallScreenWidth ? {} : styles.createMenuContainer}>
                 {!!headerText && enteredSubMenuIndexes.length === 0 && <Text style={[styles.createMenuHeaderText, styles.ph5, styles.pv3]}>{headerText}</Text>}

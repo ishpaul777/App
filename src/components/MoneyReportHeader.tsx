@@ -359,7 +359,6 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
                 confirmText={translate('iou.cancelPayment')}
                 cancelText={translate('common.dismiss')}
                 danger
-                shouldEnableNewFocusManagement
             />
             <ConfirmModal
                 title={translate('iou.deleteExpense')}
@@ -370,7 +369,6 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
                 confirmText={translate('common.delete')}
                 cancelText={translate('common.cancel')}
                 danger
-                shouldEnableNewFocusManagement
             />
         </View>
     );
