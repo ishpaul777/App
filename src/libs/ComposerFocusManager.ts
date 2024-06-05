@@ -92,10 +92,9 @@ function saveFocusState(id: ModalId, isInUploadingContext = false, shouldClearFo
     // For popoverWithoutOverlay, react calls autofocus before useEffect.
     const input = focusedInput ?? activeInput;
     focusedInput = null;
-    if (activeModals.indexOf(id) >= 0) {
-        return;
+    if (activeModals.indexOf(id) < 0) {
+        activeModals.push(id);
     }
-    activeModals.push(id);
 
     if (shouldClearFocusWithType) {
         focusMap.forEach((value, key) => {

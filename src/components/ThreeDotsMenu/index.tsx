@@ -106,7 +106,6 @@ function ThreeDotsMenu({
                 withoutOverlay={!shouldOverlay}
                 shouldSetModalVisibility={shouldSetModalVisibility}
                 anchorRef={buttonRef}
-                shouldEnableNewFocusManagement
             />
         </>
     );

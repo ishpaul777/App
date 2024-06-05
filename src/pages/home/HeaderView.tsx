@@ -375,7 +375,6 @@ function HeaderView({
                                 confirmText={translate('common.delete')}
                                 cancelText={translate('common.cancel')}
                                 danger
-                                shouldEnableNewFocusManagement
                             />
                         </>
                     )}
