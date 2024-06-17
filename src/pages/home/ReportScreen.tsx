@@ -403,9 +403,13 @@ function ReportScreen({
         [report.reportID, isOptimisticDelete, reportMetadata?.isLoadingInitialReportActions, userLeavingStatus, shouldHideReport, currentReportIDFormRoute],
     );
 
+    const [reportLastRead] = useOnyx(ONYXKEYS.REPORT_LAST_READ);
+    const lastUnreadReportActionID = reportLastRead?.[report.reportID];
+
     const fetchReport = useCallback(() => {
-        Report.openReport(reportIDFromRoute, reportActionIDFromRoute);
-    }, [reportIDFromRoute, reportActionIDFromRoute]);
+        console.log(`___________ FetchReport ___________`, { reportActionIDFromRoute, lastUnreadReportActionID });
+        Report.openReport(reportIDFromRoute, reportActionIDFromRoute || lastUnreadReportActionID);
+    }, [reportIDFromRoute, reportActionIDFromRoute, lastUnreadReportActionID]);
 
     useEffect(() => {
         if (!report.reportID) {

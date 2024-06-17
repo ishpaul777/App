@@ -4,7 +4,8 @@ import type {RouteProp} from '@react-navigation/native';
 import type {DebouncedFunc} from 'lodash';
 import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {DeviceEventEmitter, InteractionManager} from 'react-native';
-import type {LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleProp, ViewStyle} from 'react-native';
+import type {FlatListProps, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleProp, ViewStyle} from 'react-native';
+import {useOnyx } from 'react-native-onyx';
 import type {OnyxEntry} from 'react-native-onyx';
 import Animated, {useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
 import InvertedFlatList from '@components/InvertedFlatList';
@@ -30,6 +31,7 @@ import ROUTES from '@src/ROUTES';
 import type SCREENS from '@src/SCREENS';
 import type * as OnyxTypes from '@src/types/onyx';
 import type {EmptyObject} from '@src/types/utils/EmptyObject';
+import ONYXKEYS from '@src/ONYXKEYS';
 import FloatingMessageCounter from './FloatingMessageCounter';
 import getInitialNumToRender from './getInitialNumReportActionsToRender';
 import ListBoundaryLoader from './ListBoundaryLoader';
@@ -190,6 +192,13 @@ function ReportActionsList({
         return cacheUnreadMarkers.get(report.reportID);
     };
     const [currentUnreadMarker, setCurrentUnreadMarker] = useState(markerInit);
+
+    const [reportLastRead] = useOnyx(ONYXKEYS.REPORT_LAST_READ);
+    const lastUnreadReportActionID = reportLastRead?.[report.reportID];
+    useEffect(() => {
+        console.log(`___________ X ___________`, markerInit(), { reportId: report.reportID, lastUnreadReportActionID });
+    }, [lastUnreadReportActionID, report.reportID])
+
     const scrollingVerticalOffset = useRef(0);
     const readActionSkipped = useRef(false);
     const hasHeaderRendered = useRef(false);
@@ -239,6 +248,7 @@ function ReportActionsList({
             reportActionSize.current > sortedVisibleReportActions.length &&
             hasNewestReportAction
         ) {
+            console.log(`___________ C1 ___________`);
             reportScrollManager.scrollToBottom();
         }
         previousLastIndex.current = lastActionIndex;
@@ -280,6 +290,7 @@ function ReportActionsList({
 
         cacheUnreadMarkers.delete(report.reportID);
         lastVisibleActionCreatedRef.current = report.lastVisibleActionCreated;
+        console.log(`*********** setCurrentUnreadMarker:Reset1 ***********`);
         setCurrentUnreadMarker(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [report.lastVisibleActionCreated, report.reportID]);
@@ -289,6 +300,7 @@ function ReportActionsList({
             return;
         }
         if (!messageManuallyMarkedUnread && (lastReadTimeRef.current ?? '') < (report.lastReadTime ?? '')) {
+            console.log(`*********** setCurrentUnreadMarker:X2 ***********`);
             cacheUnreadMarkers.delete(report.reportID);
         }
         lastReadTimeRef.current = report.lastReadTime;
@@ -301,6 +313,7 @@ function ReportActionsList({
         const resetUnreadMarker = (newLastReadTime: string) => {
             cacheUnreadMarkers.delete(report.reportID);
             lastReadTimeRef.current = newLastReadTime;
+            console.log(`*********** setCurrentUnreadMarker:Reset2 ***********`);
             setCurrentUnreadMarker(null);
         };
 
@@ -330,7 +343,7 @@ function ReportActionsList({
     }, [report.reportID]);
 
     useEffect(() => {
-        if (linkedReportActionID) {
+        if (linkedReportActionID || !!currentUnreadMarker) {
             return;
         }
         InteractionManager.runAfterInteractions(() => {
@@ -338,6 +351,35 @@ function ReportActionsList({
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+    
+    const hasTriggerScrollToUnread = useRef(false);
+    useEffect(() => {
+        const hasLoading = [isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions].some(Boolean);
+        // console.log({ isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions });
+        if (hasLoading || !currentUnreadMarker) {
+            return;
+        }
+        const unreadMessageIndex = sortedVisibleReportActions.findIndex((action) => action.reportActionID === currentUnreadMarker);
+        const rp = sortedVisibleReportActions.find((action) => action.reportActionID === currentUnreadMarker);
+
+        if (unreadMessageIndex < 0 || hasTriggerScrollToUnread.current) {
+            return;
+        }
+        console.warn(`___________ ScrollToIndex ___________`, { unreadMessageIndex, currentUnreadMarker }, rp?.originalMessage);
+        hasTriggerScrollToUnread.current = true;
+        InteractionManager.runAfterInteractions(() => {
+            requestAnimationFrame(() => {
+                const targetIndex = unreadMessageIndex > 0 ? unreadMessageIndex - 1 : 0;
+                reportScrollManager.scrollToIndex(targetIndex);
+            });
+        });
+    }, [currentUnreadMarker, isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions, reportScrollManager, sortedVisibleReportActions])
+
+    const memorizeReportID = useMemo(() => report.reportID, [report.reportID] );
+    useEffect(() => {
+        console.log(`___________ ResetTriggerScroll ___________`, { memorizeReportID });
+        hasTriggerScrollToUnread.current = false;
+    }, [memorizeReportID])
 
     const scrollToBottomForCurrentUserAction = useCallback(
         (isFromCurrentUser: boolean) => {
@@ -346,6 +388,7 @@ function ReportActionsList({
             if (!isFromCurrentUser || !hasNewestReportActionRef.current) {
                 return;
             }
+            console.log(`___________ ScrollToBottomForCurrentUserAction ___________`);
             InteractionManager.runAfterInteractions(() => reportScrollManager.scrollToBottom());
         },
         [reportScrollManager],
@@ -404,15 +447,23 @@ function ReportActionsList({
         onScroll?.(event);
     };
 
-    const scrollToBottomAndMarkReportAsRead = () => {
+    const scrollToUnreadMessage = () => {
         if (!hasNewestReportAction) {
             Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(report.reportID));
             Report.openReport(report.reportID);
             return;
         }
-        reportScrollManager.scrollToBottom();
-        readActionSkipped.current = false;
-        Report.readNewestAction(report.reportID);
+
+        const unreadMessageIndex = sortedVisibleReportActions.findIndex((action) => action.reportActionID === currentUnreadMarker);
+
+        if (unreadMessageIndex) {
+            const targetIndex = unreadMessageIndex > 0 ? unreadMessageIndex - 1 : 0;
+            reportScrollManager.scrollToIndex(targetIndex);
+        } else {
+            reportScrollManager.scrollToBottom();
+            readActionSkipped.current = false;
+            Report.readNewestAction(report.reportID);
+        }
     };
 
     /**
@@ -460,7 +511,9 @@ function ReportActionsList({
                         isWithinVisibleThreshold;
                 }
                 if (shouldDisplay) {
+                    console.log(`___________ saveReportLastRead:x1 ___________`);
                     cacheUnreadMarkers.set(report.reportID, reportAction.reportActionID);
+                    Report.saveReportLastRead(report.reportID, reportAction.reportActionID);
                 }
             } else {
                 shouldDisplay = reportAction.reportActionID === currentUnreadMarker;
@@ -508,10 +561,13 @@ function ReportActionsList({
             if (!shouldDisplayNewMarker(reportAction, index, markerLastReadTimeRef.current, false)) {
                 return;
             }
+            console.log(`___________ MarkerFound ___________`, {index, reportAction})
             markerFound = true;
             if (!currentUnreadMarker || currentUnreadMarker !== reportAction.reportActionID) {
                 cacheUnreadMarkers.set(report.reportID, reportAction.reportActionID);
+                console.log(`*********** SetCurrentUnreadMarker:C1 ***********`, reportAction);
                 setCurrentUnreadMarker(reportAction.reportActionID);
+                Report.saveReportLastRead(report.reportID, reportAction.reportActionID);
             }
         });
 
@@ -521,13 +577,15 @@ function ReportActionsList({
         }
 
         if (!markerFound && !linkedReportActionID) {
+            console.log(`*********** setCurrentUnreadMarker:Reset3 ***********`);
             setCurrentUnreadMarker(null);
         }
     }, [sortedVisibleReportActions, report.reportID, shouldDisplayNewMarker, currentUnreadMarker, linkedReportActionID]);
 
     useEffect(() => {
+        console.log(`*********** calculateUnreadMarker:Start1 ***********`, { reportID: report.reportID });
         calculateUnreadMarker();
-    }, [calculateUnreadMarker, report.lastReadTime, messageManuallyMarkedUnread]);
+    }, [calculateUnreadMarker, report.lastReadTime, messageManuallyMarkedUnread, report.reportID]);
 
     useEffect(() => {
         if (!userActiveSince.current || report.reportID !== prevReportID) {
@@ -560,6 +618,7 @@ function ReportActionsList({
         Report.readNewestAction(report.reportID);
         userActiveSince.current = DateUtils.getDBTime();
         lastReadTimeRef.current = newMessageTimeReference;
+        console.log(`*********** setCurrentUnreadMarker:Reset4 ***********`);
         setCurrentUnreadMarker(null);
         cacheUnreadMarkers.delete(report.reportID);
         calculateUnreadMarker();
@@ -696,7 +755,7 @@ function ReportActionsList({
         <>
             <FloatingMessageCounter
                 isActive={(isFloatingMessageCounterVisible && !!currentUnreadMarker) || canScrollToNewerComments}
-                onClick={scrollToBottomAndMarkReportAsRead}
+                onClick={scrollToUnreadMessage}
             />
             <Animated.View style={[animatedStyles, styles.flex1, !shouldShowReportRecipientLocalTime && !hideComposer ? styles.pb4 : {}]}>
                 <InvertedFlatList

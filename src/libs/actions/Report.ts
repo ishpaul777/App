@@ -1595,6 +1595,16 @@ function saveReportActionDraft(reportID: string, reportAction: ReportAction, dra
     Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS_DRAFTS}${originalReportID}`, {[reportAction.reportActionID]: {message: draftMessage}});
 }
 
+function saveReportLastRead(reportID: string, reportActionID: string) {
+    console.log(`___________ ::SaveReportLastRead:: ___________`, { reportID, reportActionID });
+    Onyx.merge(ONYXKEYS.REPORT_LAST_READ, { [reportID]: reportActionID });
+}
+
+function deleteReportLastRead(reportID: string) {
+    console.log(`___________ ::DeleteReportLastRead:: ___________`, { reportID });
+    Onyx.merge(ONYXKEYS.REPORT_LAST_READ, { [reportID]: null });
+}
+
 function updateNotificationPreference(
     reportID: string,
     previousValue: NotificationPreference | undefined,
@@ -3813,4 +3823,6 @@ export {
     updateLoadingInitialReportAction,
     clearAddRoomMemberError,
     clearAvatarErrors,
+    saveReportLastRead,
+    deleteReportLastRead,
 };
