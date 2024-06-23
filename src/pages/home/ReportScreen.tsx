@@ -407,7 +407,7 @@ function ReportScreen({
     const lastUnreadReportActionID = reportLastRead?.[report.reportID];
 
     const fetchReport = useCallback(() => {
-        console.log(`___________ FetchReport ___________`, { reportActionIDFromRoute, lastUnreadReportActionID });
+        console.log(`___________ FetchReport ___________`, {reportActionIDFromRoute, lastUnreadReportActionID});
         Report.openReport(reportIDFromRoute, reportActionIDFromRoute || lastUnreadReportActionID);
     }, [reportIDFromRoute, reportActionIDFromRoute, lastUnreadReportActionID]);
 

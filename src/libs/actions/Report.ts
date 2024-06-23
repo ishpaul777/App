@@ -1595,14 +1595,25 @@ function saveReportActionDraft(reportID: string, reportAction: ReportAction, dra
     Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS_DRAFTS}${originalReportID}`, {[reportAction.reportActionID]: {message: draftMessage}});
 }
 
-function saveReportLastRead(reportID: string, reportActionID: string) {
-    console.log(`___________ ::SaveReportLastRead:: ___________`, { reportID, reportActionID });
-    Onyx.merge(ONYXKEYS.REPORT_LAST_READ, { [reportID]: reportActionID });
+let cacheUnreadMarkers = new Map<string, string>();
+
+function getUnreadMarkers() {
+    return cacheUnreadMarkers;
 }
 
-function deleteReportLastRead(reportID: string) {
-    console.log(`___________ ::DeleteReportLastRead:: ___________`, { reportID });
-    Onyx.merge(ONYXKEYS.REPORT_LAST_READ, { [reportID]: null });
+Onyx.connect({
+    key: ONYXKEYS.REPORT_LAST_READ,
+    callback: (data) => {
+        if (!data) {
+            return;
+        }
+        cacheUnreadMarkers = new Map(Object.entries(data));
+    },
+});
+
+function saveReportLastRead(reportID: string, reportActionID: string) {
+    console.log(`___________ ::SaveReportLastRead:: ___________`, {reportID, reportActionID});
+    Onyx.merge(ONYXKEYS.REPORT_LAST_READ, {[reportID]: reportActionID});
 }
 
 function updateNotificationPreference(
@@ -3824,5 +3835,5 @@ export {
     clearAddRoomMemberError,
     clearAvatarErrors,
     saveReportLastRead,
-    deleteReportLastRead,
+    getUnreadMarkers,
 };

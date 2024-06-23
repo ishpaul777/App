@@ -875,7 +875,10 @@ function ReportActionItem({
                 isDisabled={draftMessage !== undefined}
             >
                 {(hovered) => (
-                    <View style={highlightedBackgroundColorIfNeeded} testID={action.reportActionID}>
+                    <View
+                        style={highlightedBackgroundColorIfNeeded}
+                        testID={action.reportActionID}
+                    >
                         {shouldDisplayNewMarker && (!shouldUseThreadDividerLine || !isFirstVisibleReportAction) && <UnreadActionIndicator reportActionID={action.reportActionID} />}
                         {shouldDisplayContextMenu && (
                             <MiniReportActionContextMenu

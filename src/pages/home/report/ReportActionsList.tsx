@@ -4,8 +4,8 @@ import type {RouteProp} from '@react-navigation/native';
 import type {DebouncedFunc} from 'lodash';
 import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {DeviceEventEmitter, InteractionManager} from 'react-native';
-import type {FlatListProps, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleProp, ViewStyle} from 'react-native';
-import {useOnyx } from 'react-native-onyx';
+import type {LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleProp, ViewStyle} from 'react-native';
+import {useOnyx} from 'react-native-onyx';
 import type {OnyxEntry} from 'react-native-onyx';
 import Animated, {useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
 import InvertedFlatList from '@components/InvertedFlatList';
@@ -27,11 +27,11 @@ import type {CentralPaneNavigatorParamList} from '@navigation/types';
 import variables from '@styles/variables';
 import * as Report from '@userActions/Report';
 import CONST from '@src/CONST';
+import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type SCREENS from '@src/SCREENS';
 import type * as OnyxTypes from '@src/types/onyx';
 import type {EmptyObject} from '@src/types/utils/EmptyObject';
-import ONYXKEYS from '@src/ONYXKEYS';
 import FloatingMessageCounter from './FloatingMessageCounter';
 import getInitialNumToRender from './getInitialNumReportActionsToRender';
 import ListBoundaryLoader from './ListBoundaryLoader';
@@ -116,6 +116,7 @@ const newActionUnsubscribeMap: Record<string, () => void> = {};
 // We need to persist it across reports because there are at least 3 ReportScreen components created so the
 // internal states are resetted or recreated.
 const cacheUnreadMarkers = new Map<string, string>();
+// const cacheUnreadMarkers = Report.getUnreadMarkers();
 
 // Seems that there is an architecture issue that prevents us from using the reportID with useRef
 // the useRef value gets reset when the reportID changes, so we use a global variable to keep track
@@ -185,19 +186,28 @@ function ReportActionsList({
         return unsubscriber;
     }, []);
 
+    const [reportLastRead] = useOnyx(ONYXKEYS.REPORT_LAST_READ);
+    const lastUnreadReportActionID = reportLastRead?.[report.reportID];
+
     const markerInit = () => {
         if (!cacheUnreadMarkers.has(report.reportID)) {
             return null;
         }
-        return cacheUnreadMarkers.get(report.reportID);
+        const cacheMarker = cacheUnreadMarkers.get(report.reportID);
+        if (cacheMarker === lastUnreadReportActionID) {
+            return null;
+        }
+        return cacheMarker ?? lastUnreadReportActionID;
     };
     const [currentUnreadMarker, setCurrentUnreadMarker] = useState(markerInit);
 
-    const [reportLastRead] = useOnyx(ONYXKEYS.REPORT_LAST_READ);
-    const lastUnreadReportActionID = reportLastRead?.[report.reportID];
     useEffect(() => {
-        console.log(`___________ X ___________`, markerInit(), { reportId: report.reportID, lastUnreadReportActionID });
-    }, [lastUnreadReportActionID, report.reportID])
+        console.log(`*********** currentUnreadMarker ***********`, currentUnreadMarker);
+    }, [currentUnreadMarker]);
+
+    useEffect(() => {
+        console.log(`___________ X ___________`, {reportId: report.reportID, lastUnreadReportActionID});
+    }, [lastUnreadReportActionID, report.reportID]);
 
     const scrollingVerticalOffset = useRef(0);
     const readActionSkipped = useRef(false);
@@ -290,7 +300,7 @@ function ReportActionsList({
 
         cacheUnreadMarkers.delete(report.reportID);
         lastVisibleActionCreatedRef.current = report.lastVisibleActionCreated;
-        console.log(`*********** setCurrentUnreadMarker:Reset1 ***********`);
+        console.log(`*********** CurrentUnreadMarker:Reset1 ***********`);
         setCurrentUnreadMarker(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [report.lastVisibleActionCreated, report.reportID]);
@@ -300,7 +310,7 @@ function ReportActionsList({
             return;
         }
         if (!messageManuallyMarkedUnread && (lastReadTimeRef.current ?? '') < (report.lastReadTime ?? '')) {
-            console.log(`*********** setCurrentUnreadMarker:X2 ***********`);
+            console.log(`*********** Clear:UnreadMarkers ***********`);
             cacheUnreadMarkers.delete(report.reportID);
         }
         lastReadTimeRef.current = report.lastReadTime;
@@ -313,7 +323,7 @@ function ReportActionsList({
         const resetUnreadMarker = (newLastReadTime: string) => {
             cacheUnreadMarkers.delete(report.reportID);
             lastReadTimeRef.current = newLastReadTime;
-            console.log(`*********** setCurrentUnreadMarker:Reset2 ***********`);
+            console.log(`*********** CurrentUnreadMarker:Reset2 ***********`);
             setCurrentUnreadMarker(null);
         };
 
@@ -351,7 +361,7 @@ function ReportActionsList({
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    
+
     const hasTriggerScrollToUnread = useRef(false);
     useEffect(() => {
         const hasLoading = [isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions].some(Boolean);
@@ -365,7 +375,7 @@ function ReportActionsList({
         if (unreadMessageIndex < 0 || hasTriggerScrollToUnread.current) {
             return;
         }
-        console.warn(`___________ ScrollToIndex ___________`, { unreadMessageIndex, currentUnreadMarker }, rp?.originalMessage);
+        console.warn(`___________ ScrollToIndex ___________`, {unreadMessageIndex, currentUnreadMarker}, rp?.originalMessage);
         hasTriggerScrollToUnread.current = true;
         InteractionManager.runAfterInteractions(() => {
             requestAnimationFrame(() => {
@@ -373,13 +383,13 @@ function ReportActionsList({
                 reportScrollManager.scrollToIndex(targetIndex);
             });
         });
-    }, [currentUnreadMarker, isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions, reportScrollManager, sortedVisibleReportActions])
+    }, [currentUnreadMarker, isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions, reportScrollManager, sortedVisibleReportActions]);
 
-    const memorizeReportID = useMemo(() => report.reportID, [report.reportID] );
+    const memorizeReportID = useMemo(() => report.reportID, [report.reportID]);
     useEffect(() => {
-        console.log(`___________ ResetTriggerScroll ___________`, { memorizeReportID });
+        console.log(`___________ ResetTriggerScroll ___________`, {memorizeReportID});
         hasTriggerScrollToUnread.current = false;
-    }, [memorizeReportID])
+    }, [memorizeReportID]);
 
     const scrollToBottomForCurrentUserAction = useCallback(
         (isFromCurrentUser: boolean) => {
@@ -561,7 +571,7 @@ function ReportActionsList({
             if (!shouldDisplayNewMarker(reportAction, index, markerLastReadTimeRef.current, false)) {
                 return;
             }
-            console.log(`___________ MarkerFound ___________`, {index, reportAction})
+            console.log(`___________ MarkerFound ___________`, {index, reportAction});
             markerFound = true;
             if (!currentUnreadMarker || currentUnreadMarker !== reportAction.reportActionID) {
                 cacheUnreadMarkers.set(report.reportID, reportAction.reportActionID);
@@ -583,7 +593,6 @@ function ReportActionsList({
     }, [sortedVisibleReportActions, report.reportID, shouldDisplayNewMarker, currentUnreadMarker, linkedReportActionID]);
 
     useEffect(() => {
-        console.log(`*********** calculateUnreadMarker:Start1 ***********`, { reportID: report.reportID });
         calculateUnreadMarker();
     }, [calculateUnreadMarker, report.lastReadTime, messageManuallyMarkedUnread, report.reportID]);
 
