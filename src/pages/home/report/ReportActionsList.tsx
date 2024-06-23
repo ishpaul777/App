@@ -5,6 +5,7 @@ import type {DebouncedFunc} from 'lodash';
 import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {DeviceEventEmitter, InteractionManager} from 'react-native';
 import type {LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleProp, ViewStyle} from 'react-native';
+import {useOnyx} from 'react-native-onyx';
 import type {OnyxEntry} from 'react-native-onyx';
 import Animated, {useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
 import InvertedFlatList from '@components/InvertedFlatList';
@@ -26,6 +27,7 @@ import type {CentralPaneNavigatorParamList} from '@navigation/types';
 import variables from '@styles/variables';
 import * as Report from '@userActions/Report';
 import CONST from '@src/CONST';
+import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type SCREENS from '@src/SCREENS';
 import type * as OnyxTypes from '@src/types/onyx';
@@ -114,6 +116,7 @@ const newActionUnsubscribeMap: Record<string, () => void> = {};
 // We need to persist it across reports because there are at least 3 ReportScreen components created so the
 // internal states are resetted or recreated.
 const cacheUnreadMarkers = new Map<string, string>();
+// const cacheUnreadMarkers = Report.getUnreadMarkers();
 
 // Seems that there is an architecture issue that prevents us from using the reportID with useRef
 // the useRef value gets reset when the reportID changes, so we use a global variable to keep track
@@ -183,13 +186,29 @@ function ReportActionsList({
         return unsubscriber;
     }, []);
 
+    const [reportLastRead] = useOnyx(ONYXKEYS.REPORT_LAST_READ);
+    const lastUnreadReportActionID = reportLastRead?.[report.reportID];
+
     const markerInit = () => {
         if (!cacheUnreadMarkers.has(report.reportID)) {
             return null;
         }
-        return cacheUnreadMarkers.get(report.reportID);
+        const cacheMarker = cacheUnreadMarkers.get(report.reportID);
+        if (cacheMarker === lastUnreadReportActionID) {
+            return null;
+        }
+        return cacheMarker ?? lastUnreadReportActionID;
     };
     const [currentUnreadMarker, setCurrentUnreadMarker] = useState(markerInit);
+
+    useEffect(() => {
+        console.log(`*********** currentUnreadMarker ***********`, currentUnreadMarker);
+    }, [currentUnreadMarker]);
+
+    useEffect(() => {
+        console.log(`___________ X ___________`, {reportId: report.reportID, lastUnreadReportActionID});
+    }, [lastUnreadReportActionID, report.reportID]);
+
     const scrollingVerticalOffset = useRef(0);
     const readActionSkipped = useRef(false);
     const hasHeaderRendered = useRef(false);
@@ -239,6 +258,7 @@ function ReportActionsList({
             reportActionSize.current > sortedVisibleReportActions.length &&
             hasNewestReportAction
         ) {
+            console.log(`___________ C1 ___________`);
             reportScrollManager.scrollToBottom();
         }
         previousLastIndex.current = lastActionIndex;
@@ -280,6 +300,7 @@ function ReportActionsList({
 
         cacheUnreadMarkers.delete(report.reportID);
         lastVisibleActionCreatedRef.current = report.lastVisibleActionCreated;
+        console.log(`*********** CurrentUnreadMarker:Reset1 ***********`);
         setCurrentUnreadMarker(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [report.lastVisibleActionCreated, report.reportID]);
@@ -289,6 +310,7 @@ function ReportActionsList({
             return;
         }
         if (!messageManuallyMarkedUnread && (lastReadTimeRef.current ?? '') < (report.lastReadTime ?? '')) {
+            console.log(`*********** Clear:UnreadMarkers ***********`);
             cacheUnreadMarkers.delete(report.reportID);
         }
         lastReadTimeRef.current = report.lastReadTime;
@@ -301,6 +323,7 @@ function ReportActionsList({
         const resetUnreadMarker = (newLastReadTime: string) => {
             cacheUnreadMarkers.delete(report.reportID);
             lastReadTimeRef.current = newLastReadTime;
+            console.log(`*********** CurrentUnreadMarker:Reset2 ***********`);
             setCurrentUnreadMarker(null);
         };
 
@@ -330,7 +353,7 @@ function ReportActionsList({
     }, [report.reportID]);
 
     useEffect(() => {
-        if (linkedReportActionID) {
+        if (linkedReportActionID || !!currentUnreadMarker) {
             return;
         }
         InteractionManager.runAfterInteractions(() => {
@@ -339,6 +362,35 @@ function ReportActionsList({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const hasTriggerScrollToUnread = useRef(false);
+    useEffect(() => {
+        const hasLoading = [isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions].some(Boolean);
+        // console.log({ isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions });
+        if (hasLoading || !currentUnreadMarker) {
+            return;
+        }
+        const unreadMessageIndex = sortedVisibleReportActions.findIndex((action) => action.reportActionID === currentUnreadMarker);
+        const rp = sortedVisibleReportActions.find((action) => action.reportActionID === currentUnreadMarker);
+
+        if (unreadMessageIndex < 0 || hasTriggerScrollToUnread.current) {
+            return;
+        }
+        console.warn(`___________ ScrollToIndex ___________`, {unreadMessageIndex, currentUnreadMarker}, rp?.originalMessage);
+        hasTriggerScrollToUnread.current = true;
+        InteractionManager.runAfterInteractions(() => {
+            requestAnimationFrame(() => {
+                const targetIndex = unreadMessageIndex > 0 ? unreadMessageIndex - 1 : 0;
+                reportScrollManager.scrollToIndex(targetIndex);
+            });
+        });
+    }, [currentUnreadMarker, isLoadingInitialReportActions, isLoadingNewerReportActions, isLoadingOlderReportActions, reportScrollManager, sortedVisibleReportActions]);
+
+    const memorizeReportID = useMemo(() => report.reportID, [report.reportID]);
+    useEffect(() => {
+        console.log(`___________ ResetTriggerScroll ___________`, {memorizeReportID});
+        hasTriggerScrollToUnread.current = false;
+    }, [memorizeReportID]);
+
     const scrollToBottomForCurrentUserAction = useCallback(
         (isFromCurrentUser: boolean) => {
             // If a new comment is added and it's from the current user scroll to the bottom otherwise leave the user positioned where
@@ -346,6 +398,7 @@ function ReportActionsList({
             if (!isFromCurrentUser || !hasNewestReportActionRef.current) {
                 return;
             }
+            console.log(`___________ ScrollToBottomForCurrentUserAction ___________`);
             InteractionManager.runAfterInteractions(() => reportScrollManager.scrollToBottom());
         },
         [reportScrollManager],
@@ -404,15 +457,23 @@ function ReportActionsList({
         onScroll?.(event);
     };
 
-    const scrollToBottomAndMarkReportAsRead = () => {
+    const scrollToUnreadMessage = () => {
         if (!hasNewestReportAction) {
             Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(report.reportID));
             Report.openReport(report.reportID);
             return;
         }
-        reportScrollManager.scrollToBottom();
-        readActionSkipped.current = false;
-        Report.readNewestAction(report.reportID);
+
+        const unreadMessageIndex = sortedVisibleReportActions.findIndex((action) => action.reportActionID === currentUnreadMarker);
+
+        if (unreadMessageIndex) {
+            const targetIndex = unreadMessageIndex > 0 ? unreadMessageIndex - 1 : 0;
+            reportScrollManager.scrollToIndex(targetIndex);
+        } else {
+            reportScrollManager.scrollToBottom();
+            readActionSkipped.current = false;
+            Report.readNewestAction(report.reportID);
+        }
     };
 
     /**
@@ -460,7 +521,9 @@ function ReportActionsList({
                         isWithinVisibleThreshold;
                 }
                 if (shouldDisplay) {
+                    console.log(`___________ saveReportLastRead:x1 ___________`);
                     cacheUnreadMarkers.set(report.reportID, reportAction.reportActionID);
+                    Report.saveReportLastRead(report.reportID, reportAction.reportActionID);
                 }
             } else {
                 shouldDisplay = reportAction.reportActionID === currentUnreadMarker;
@@ -486,7 +549,7 @@ function ReportActionsList({
             return !ReportUtils.isCanceledTaskReport(report, parentReportAction);
         }
 
-        return ReportUtils.isExpenseReport(report) || ReportUtils.isIOUReport(report);
+        return ReportUtils.isExpenseReport(report) || ReportUtils.isIOUReport(report) || ReportUtils.isInvoiceReport(report);
     }, [parentReportAction, report, sortedVisibleReportActions]);
 
     // storing the last read time used to render the unread marker
@@ -508,10 +571,13 @@ function ReportActionsList({
             if (!shouldDisplayNewMarker(reportAction, index, markerLastReadTimeRef.current, false)) {
                 return;
             }
+            console.log(`___________ MarkerFound ___________`, {index, reportAction});
             markerFound = true;
             if (!currentUnreadMarker || currentUnreadMarker !== reportAction.reportActionID) {
                 cacheUnreadMarkers.set(report.reportID, reportAction.reportActionID);
+                console.log(`*********** SetCurrentUnreadMarker:C1 ***********`, reportAction);
                 setCurrentUnreadMarker(reportAction.reportActionID);
+                Report.saveReportLastRead(report.reportID, reportAction.reportActionID);
             }
         });
 
@@ -521,13 +587,14 @@ function ReportActionsList({
         }
 
         if (!markerFound && !linkedReportActionID) {
+            console.log(`*********** setCurrentUnreadMarker:Reset3 ***********`);
             setCurrentUnreadMarker(null);
         }
     }, [sortedVisibleReportActions, report.reportID, shouldDisplayNewMarker, currentUnreadMarker, linkedReportActionID]);
 
     useEffect(() => {
         calculateUnreadMarker();
-    }, [calculateUnreadMarker, report.lastReadTime, messageManuallyMarkedUnread]);
+    }, [calculateUnreadMarker, report.lastReadTime, messageManuallyMarkedUnread, report.reportID]);
 
     useEffect(() => {
         if (!userActiveSince.current || report.reportID !== prevReportID) {
@@ -547,14 +614,11 @@ function ReportActionsList({
         lastMessageTime.current = null;
         if (
             scrollingVerticalOffset.current >= MSG_VISIBLE_THRESHOLD ||
-            !(
-                sortedVisibleReportActions &&
-                sortedVisibleReportActions.some(
-                    (reportAction) =>
-                        newMessageTimeReference &&
-                        newMessageTimeReference < reportAction.created &&
-                        (ReportActionsUtils.isReportPreviewAction(reportAction) ? reportAction.childLastActorAccountID : reportAction.actorAccountID) !== Report.getCurrentUserAccountID(),
-                )
+            !sortedVisibleReportActions.some(
+                (reportAction) =>
+                    newMessageTimeReference &&
+                    newMessageTimeReference < reportAction.created &&
+                    (ReportActionsUtils.isReportPreviewAction(reportAction) ? reportAction.childLastActorAccountID : reportAction.actorAccountID) !== Report.getCurrentUserAccountID(),
             )
         ) {
             return;
@@ -563,6 +627,7 @@ function ReportActionsList({
         Report.readNewestAction(report.reportID);
         userActiveSince.current = DateUtils.getDBTime();
         lastReadTimeRef.current = newMessageTimeReference;
+        console.log(`*********** setCurrentUnreadMarker:Reset4 ***********`);
         setCurrentUnreadMarker(null);
         cacheUnreadMarkers.delete(report.reportID);
         calculateUnreadMarker();
@@ -699,7 +764,7 @@ function ReportActionsList({
         <>
             <FloatingMessageCounter
                 isActive={(isFloatingMessageCounterVisible && !!currentUnreadMarker) || canScrollToNewerComments}
-                onClick={scrollToBottomAndMarkReportAsRead}
+                onClick={scrollToUnreadMessage}
             />
             <Animated.View style={[animatedStyles, styles.flex1, !shouldShowReportRecipientLocalTime && !hideComposer ? styles.pb4 : {}]}>
                 <InvertedFlatList
