@@ -55,6 +55,7 @@ type SuggestionProps = {
  */
 function Suggestions(
     {
+        hostComponentRef,
         value,
         setValue,
         selection,
@@ -174,6 +175,7 @@ function Suggestions(
             />
             <SuggestionMention
                 ref={suggestionMentionRef}
+                hostComponentRef={hostComponentRef}
                 // eslint-disable-next-line react/jsx-props-no-spreading
                 {...baseProps}
             />

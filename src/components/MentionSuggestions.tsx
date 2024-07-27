@@ -66,6 +66,7 @@ type MentionSuggestionsProps = {
 const keyExtractor = (item: Mention) => item.alternateText;
 
 function MentionSuggestions({
+    hostComponentRef,
     prefix,
     mentions,
     highlightedMentionIndex = 0,
@@ -152,6 +153,7 @@ function MentionSuggestions({
 
     return (
         <AutoCompleteSuggestions
+            hostComponentRef={hostComponentRef}
             suggestions={mentions}
             renderSuggestionMenuItem={renderSuggestionMenuItem}
             keyExtractor={keyExtractor}

@@ -178,6 +178,7 @@ function ReportActionCompose({
 
     const suggestionsRef = useRef<SuggestionsRef>(null);
     const composerRef = useRef<ComposerRef>(null);
+    let hostComponentRef = useRef();
     const reportParticipantIDs = useMemo(
         () =>
             Object.keys(report?.participants ?? {})
@@ -356,6 +357,12 @@ function ReportActionCompose({
 
     const isSendDisabled = isCommentEmpty || isBlockedFromConcierge || !!disabled || hasExceededMaxCommentLength;
 
+    const hideSuggestions = () => {
+        if (hostComponentRef.current) {
+            hostComponentRef.current.setNativeProps({opacity: 0});
+        }
+    };
+
     const handleSendMessage = useCallback(() => {
         'worklet';
 
@@ -366,6 +373,7 @@ function ReportActionCompose({
         // We are setting the isCommentEmpty flag to true so the status of it will be in sync of the native text input state
         runOnJS(setIsCommentEmpty)(true);
         runOnJS(resetFullComposerSize)();
+        runOnJS(hideSuggestions)();
         setNativeProps(animatedRef, {text: ''}); // clears native text input on the UI thread
         runOnJS(submitForm)();
     }, [isSendDisabled, resetFullComposerSize, submitForm, animatedRef, isReportReadyForDisplay]);
@@ -431,6 +439,7 @@ function ReportActionCompose({
                                     />
                                     <ComposerWithSuggestions
                                         ref={composerRef}
+                                        hostComponentRef={hostComponentRef}
                                         animatedRef={animatedRef}
                                         suggestionsRef={suggestionsRef}
                                         isNextModalWillOpenRef={isNextModalWillOpenRef}

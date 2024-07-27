@@ -57,7 +57,18 @@ type SuggestionPersonalDetailsList = Record<
 >;
 
 function SuggestionMention(
-    {value, selection, setSelection, updateComment, isAutoSuggestionPickerLarge, measureParentContainerAndReportCursor, isComposerFocused, isGroupPolicyReport, policyID}: SuggestionProps,
+    {
+        hostComponentRef,
+        value,
+        selection,
+        setSelection,
+        updateComment,
+        isAutoSuggestionPickerLarge,
+        measureParentContainerAndReportCursor,
+        isComposerFocused,
+        isGroupPolicyReport,
+        policyID,
+    }: SuggestionProps,
     ref: ForwardedRef<SuggestionsRef>,
 ) {
     const personalDetails = usePersonalDetails() ?? CONST.EMPTY_OBJECT;
@@ -429,6 +440,7 @@ function SuggestionMention(
 
     return (
         <MentionSuggestions
+            hostComponentRef={hostComponentRef}
             highlightedMentionIndex={highlightedMentionIndex}
             mentions={suggestionValues.suggestedMentions}
             prefix={suggestionValues.mentionPrefix}

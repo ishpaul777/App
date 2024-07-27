@@ -215,6 +215,7 @@ const shouldFocusInputOnScreenFocus = canFocusInputOnScreenFocus();
  */
 function ComposerWithSuggestions(
     {
+        hostComponentRef,
         // Onyx
         modal,
         preferredSkinTone = CONST.EMOJI_DEFAULT_SKIN_TONE,
@@ -802,6 +803,7 @@ function ComposerWithSuggestions(
 
             <Suggestions
                 ref={suggestionsRef}
+                hostComponentRef={hostComponentRef}
                 isComposerFocused={textInputRef.current?.isFocused()}
                 updateComment={updateComment}
                 measureParentContainerAndReportCursor={measureParentContainerAndReportCursor}
