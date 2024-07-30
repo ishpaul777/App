@@ -394,7 +394,7 @@ function ComposerWithSuggestions(
         [selection.start, selection.end],
     );
 
-    /**
+    /*
      * Update the value of the comment in Onyx
      */
     const updateComment = useCallback(

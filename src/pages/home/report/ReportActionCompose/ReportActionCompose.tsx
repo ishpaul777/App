@@ -55,6 +55,7 @@ type ComposerRef = {
 
 type SuggestionsRef = {
     resetSuggestions: () => void;
+    hideSuggestions: () => void;
     onSelectionChange?: (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => void;
     triggerHotkeyActions: (event: KeyboardEvent) => boolean | undefined;
     updateShouldShowSuggestionMenuToFalse: (shouldShowSuggestionMenu?: boolean) => void;
@@ -358,8 +359,10 @@ function ReportActionCompose({
     const isSendDisabled = isCommentEmpty || isBlockedFromConcierge || !!disabled || hasExceededMaxCommentLength;
 
     const hideSuggestions = () => {
-        if (hostComponentRef.current) {
-            hostComponentRef.current.setNativeProps({opacity: 0});
+        console.log('TESTING ReportActionCompose.tsx hideSuggestions');
+        if (suggestionsRef.current) {
+            console.log('TESTING ReportActionCompose.tsx ' + 'suggestionsRef.current: ', suggestionsRef.current);
+            suggestionsRef.current.hideSuggestions();
         }
     };
 

@@ -72,6 +72,7 @@ function SuggestionMention(
     ref: ForwardedRef<SuggestionsRef>,
 ) {
     const personalDetails = usePersonalDetails() ?? CONST.EMPTY_OBJECT;
+    const nativeViewRef = useRef(null);
     const {translate, formatPhoneNumber} = useLocalize();
     const [suggestionValues, setSuggestionValues] = useState(defaultSuggestionsValues);
 
@@ -211,6 +212,18 @@ function SuggestionMention(
      */
     const resetSuggestions = useCallback(() => {
         setSuggestionValues(defaultSuggestionsValues);
+    }, []);
+
+    const hideSuggestions = useCallback(() => {
+        console.log('TESTING SuggestionMention' + 'nativeViewRef: ', nativeViewRef);
+        if (nativeViewRef.current) {
+            console.log('TESTING SuggestionMention' + 'nativeViewRef.current: ', nativeViewRef.current);
+            nativeViewRef.current.setNativeProps({opacity: 0});
+        }
+
+        // if (nativeViewRef.current?.setNativeProp) {
+        //     nativeViewRef.current.setNativeProp({opacity: 0});
+        // }
     }, []);
 
     /**
@@ -425,13 +438,14 @@ function SuggestionMention(
         ref,
         () => ({
             resetSuggestions,
+            hideSuggestions,
             triggerHotkeyActions,
             setShouldBlockSuggestionCalc,
             updateShouldShowSuggestionMenuToFalse,
             getSuggestions,
             getIsSuggestionsMenuVisible,
         }),
-        [resetSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
+        [resetSuggestions, hideSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
     );
 
     if (!isMentionSuggestionsMenuVisible) {
@@ -440,7 +454,8 @@ function SuggestionMention(
 
     return (
         <MentionSuggestions
-            hostComponentRef={hostComponentRef}
+            ref={nativeViewRef}
+            hostComponentRef={nativeViewRef}
             highlightedMentionIndex={highlightedMentionIndex}
             mentions={suggestionValues.suggestedMentions}
             prefix={suggestionValues.mentionPrefix}
