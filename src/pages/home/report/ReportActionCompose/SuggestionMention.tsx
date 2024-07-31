@@ -412,7 +412,7 @@ function SuggestionMention(
     const getIsSuggestionsMenuVisible = useCallback(() => isMentionSuggestionsMenuVisible, [isMentionSuggestionsMenuVisible]);
 
     const hideSuggestions = useCallback(() => {
-        suggestionMentionRef.current?.hideSuggestions();
+        suggestionMentionRef.current?.setNativeProps({opacity: 0});
     }, []);
 
     useImperativeHandle(

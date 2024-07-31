@@ -1,4 +1,5 @@
 import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef} from 'react';
+import {opacity} from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 import useKeyboardState from '@hooks/useKeyboardState';
 import useSafeAreaInsets from '@hooks/useSafeAreaInsets';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -48,7 +49,6 @@ const initialContainerState = {
  * On the native platform, tapping on auto-complete suggestions will not blur the main input.
  */
 function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCursor = () => {}, ...props}: AutoCompleteSuggestionsProps<TSuggestion>, ref) {
-    const autoCompleteSuggestionsRef = useRef();
     const containerRef = React.useRef<HTMLDivElement>(null);
     const isInitialRender = React.useRef<boolean>(true);
     const isSuggestionMenuAboveRef = React.useRef<boolean>(false);
@@ -75,14 +75,6 @@ function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCu
         };
         return () => (container.onpointerdown = null);
     }, []);
-
-    const hideSuggestions = useCallback(() => {
-        if (autoCompleteSuggestionsRef.current) {
-            autoCompleteSuggestionsRef.current.hideSuggestions();
-        }
-    }, []);
-
-    useImperativeHandle(ref, () => ({hideSuggestions}), [hideSuggestions]);
 
     const suggestionsLength = props.suggestions.length;
 
@@ -149,7 +141,7 @@ function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCu
         <AutoCompleteSuggestionsPortal
             // eslint-disable-next-line react/jsx-props-no-spreading
             {...props}
-            ref={autoCompleteSuggestionsRef}
+            ref={ref}
             left={containerState.left}
             width={containerState.width}
             bottom={containerState.bottom}

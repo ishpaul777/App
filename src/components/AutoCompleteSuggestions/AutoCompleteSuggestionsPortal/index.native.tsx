@@ -9,7 +9,6 @@ import TransparentOverlay from './TransparentOverlay/TransparentOverlay';
 import type {AutoCompleteSuggestionsPortalProps} from './types';
 
 function AutoCompleteSuggestionsPortal<TSuggestion>({left = 0, width = 0, bottom = 0, resetSuggestions = () => {}, ...props}: AutoCompleteSuggestionsPortalProps<TSuggestion>, ref) {
-    const nativeViewRef = useRef();
     const StyleUtils = useStyleUtils();
     const styles = useMemo(() => StyleUtils.getBaseAutoCompleteSuggestionContainerStyle({left, width, bottom: bottom + getBottomSuggestionPadding()}), [StyleUtils, left, width, bottom]);
 
@@ -17,23 +16,11 @@ function AutoCompleteSuggestionsPortal<TSuggestion>({left = 0, width = 0, bottom
         return null;
     }
 
-    const hideSuggestions = useCallback(() => {
-        nativeViewRef.current.setNativeProps({opacity: 0});
-    }, []);
-
-    useImperativeHandle(
-        ref,
-        () => ({
-            hideSuggestions,
-        }),
-        [hideSuggestions],
-    );
-
     return (
         <Portal hostName="suggestions">
             <TransparentOverlay resetSuggestions={resetSuggestions} />
             <View
-                ref={nativeViewRef}
+                ref={ref}
                 style={styles}
             >
                 {/* eslint-disable-next-line react/jsx-props-no-spreading */}

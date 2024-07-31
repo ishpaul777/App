@@ -70,16 +70,9 @@ function MentionSuggestions(
     {prefix, mentions, highlightedMentionIndex = 0, onSelect, isMentionPickerLarge, measureParentContainerAndReportCursor = () => {}, resetSuggestions}: MentionSuggestionsProps,
     ref: typeof ForwardedRef,
 ) {
-    const mentionSuggestionsRef = useRef();
     const theme = useTheme();
     const styles = useThemeStyles();
     const StyleUtils = useStyleUtils();
-
-    const hideSuggestions = useCallback(() => {
-        mentionSuggestionsRef.current?.hideSuggestions();
-    }, []);
-
-    useImperativeHandle(ref, () => ({hideSuggestions}), [hideSuggestions]);
     /**
      * Render a suggestion menu item component.
      */
@@ -155,7 +148,7 @@ function MentionSuggestions(
 
     return (
         <AutoCompleteSuggestions
-            ref={mentionSuggestionsRef}
+            ref={ref}
             suggestions={mentions}
             renderSuggestionMenuItem={renderSuggestionMenuItem}
             keyExtractor={keyExtractor}
