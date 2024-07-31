@@ -101,6 +101,7 @@ function Suggestions(
     }, []);
 
     const hideSuggestions = useCallback(() => {
+        suggestionEmojiRef.current?.hideSuggestions();
         suggestionMentionRef.current?.hideSuggestions();
     }, []);
 

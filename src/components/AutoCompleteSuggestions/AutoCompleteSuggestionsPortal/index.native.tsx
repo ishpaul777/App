@@ -1,5 +1,4 @@
 import {Portal} from '@gorhom/portal';
-import type ForwardedRef from 'react';
 import React, {forwardRef, useCallback, useImperativeHandle, useMemo, useRef} from 'react';
 import {View} from 'react-native';
 import BaseAutoCompleteSuggestions from '@components/AutoCompleteSuggestions/BaseAutoCompleteSuggestions';
