@@ -1,5 +1,4 @@
-import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef} from 'react';
-import {opacity} from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
+import React, {forwardRef, useEffect} from 'react';
 import useKeyboardState from '@hooks/useKeyboardState';
 import useSafeAreaInsets from '@hooks/useSafeAreaInsets';
 import useStyleUtils from '@hooks/useStyleUtils';

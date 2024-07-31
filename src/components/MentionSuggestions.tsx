@@ -1,5 +1,5 @@
 import type ForwardedRef from 'react';
-import React, {forwardRef, useCallback, useImperativeHandle, useRef} from 'react';
+import React, {forwardRef, useCallback} from 'react';
 import {View} from 'react-native';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
