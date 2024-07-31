@@ -57,22 +57,11 @@ type SuggestionPersonalDetailsList = Record<
 >;
 
 function SuggestionMention(
-    {
-        hostComponentRef,
-        value,
-        selection,
-        setSelection,
-        updateComment,
-        isAutoSuggestionPickerLarge,
-        measureParentContainerAndReportCursor,
-        isComposerFocused,
-        isGroupPolicyReport,
-        policyID,
-    }: SuggestionProps,
+    {value, selection, setSelection, updateComment, isAutoSuggestionPickerLarge, measureParentContainerAndReportCursor, isComposerFocused, isGroupPolicyReport, policyID}: SuggestionProps,
     ref: ForwardedRef<SuggestionsRef>,
 ) {
+    const suggestionMentionRef = useRef();
     const personalDetails = usePersonalDetails() ?? CONST.EMPTY_OBJECT;
-    const nativeViewRef = useRef(null);
     const {translate, formatPhoneNumber} = useLocalize();
     const [suggestionValues, setSuggestionValues] = useState(defaultSuggestionsValues);
 
@@ -212,18 +201,6 @@ function SuggestionMention(
      */
     const resetSuggestions = useCallback(() => {
         setSuggestionValues(defaultSuggestionsValues);
-    }, []);
-
-    const hideSuggestions = useCallback(() => {
-        console.log('TESTING SuggestionMention' + 'nativeViewRef: ', nativeViewRef);
-        if (nativeViewRef.current) {
-            console.log('TESTING SuggestionMention' + 'nativeViewRef.current: ', nativeViewRef.current);
-            nativeViewRef.current.setNativeProps({opacity: 0});
-        }
-
-        // if (nativeViewRef.current?.setNativeProp) {
-        //     nativeViewRef.current.setNativeProp({opacity: 0});
-        // }
     }, []);
 
     /**
@@ -434,6 +411,10 @@ function SuggestionMention(
     const getSuggestions = useCallback(() => suggestionValues.suggestedMentions, [suggestionValues]);
     const getIsSuggestionsMenuVisible = useCallback(() => isMentionSuggestionsMenuVisible, [isMentionSuggestionsMenuVisible]);
 
+    const hideSuggestions = useCallback(() => {
+        suggestionMentionRef.current?.hideSuggestions();
+    }, []);
+
     useImperativeHandle(
         ref,
         () => ({
@@ -454,8 +435,7 @@ function SuggestionMention(
 
     return (
         <MentionSuggestions
-            ref={nativeViewRef}
-            hostComponentRef={nativeViewRef}
+            ref={suggestionMentionRef}
             highlightedMentionIndex={highlightedMentionIndex}
             mentions={suggestionValues.suggestedMentions}
             prefix={suggestionValues.mentionPrefix}

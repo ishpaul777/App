@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {forwardRef} from 'react';
 import type {ReactElement} from 'react';
 import ReactDOM from 'react-dom';
 import {View} from 'react-native';
@@ -49,5 +49,5 @@ function AutoCompleteSuggestionsPortal<TSuggestion>({
 
 AutoCompleteSuggestionsPortal.displayName = 'AutoCompleteSuggestionsPortal';
 
-export default AutoCompleteSuggestionsPortal;
+export default forwardRef(AutoCompleteSuggestionsPortal);
 export type {AutoCompleteSuggestionsPortalProps};

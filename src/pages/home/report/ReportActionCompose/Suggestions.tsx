@@ -1,5 +1,5 @@
 import type {ForwardedRef} from 'react';
-import React, {forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef} from 'react';
+import React, {forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import type {NativeSyntheticEvent, TextInputSelectionChangeEventData} from 'react-native';
 import {View} from 'react-native';
 import type {MeasureParentContainerAndCursorCallback} from '@components/AutoCompleteSuggestions/types';
@@ -55,7 +55,6 @@ type SuggestionProps = {
  */
 function Suggestions(
     {
-        hostComponentRef,
         value,
         setValue,
         selection,
@@ -102,12 +101,7 @@ function Suggestions(
     }, []);
 
     const hideSuggestions = useCallback(() => {
-        console.log('TESTING Suggestions.tsx hideSuggestions');
-        if (suggestionMentionRef.current) {
-            console.log('TESTING Suggestions.tsx suggestionMentionRef.current: ' + Object.keys(suggestionMentionRef.current));
-            // suggestionEmojiRef.current?.resetSuggestions();
-            suggestionMentionRef.current?.hideSuggestions();
-        }
+        suggestionMentionRef.current?.hideSuggestions();
     }, []);
 
     /**
@@ -194,7 +188,6 @@ function Suggestions(
             />
             <SuggestionMention
                 ref={suggestionMentionRef}
-                hostComponentRef={hostComponentRef}
                 // eslint-disable-next-line react/jsx-props-no-spreading
                 {...baseProps}
             />

@@ -179,7 +179,6 @@ function ReportActionCompose({
 
     const suggestionsRef = useRef<SuggestionsRef>(null);
     const composerRef = useRef<ComposerRef>(null);
-    let hostComponentRef = useRef();
     const reportParticipantIDs = useMemo(
         () =>
             Object.keys(report?.participants ?? {})
@@ -358,13 +357,9 @@ function ReportActionCompose({
 
     const isSendDisabled = isCommentEmpty || isBlockedFromConcierge || !!disabled || hasExceededMaxCommentLength;
 
-    const hideSuggestions = () => {
-        console.log('TESTING ReportActionCompose.tsx hideSuggestions');
-        if (suggestionsRef.current) {
-            console.log('TESTING ReportActionCompose.tsx ' + 'suggestionsRef.current: ', suggestionsRef.current);
-            suggestionsRef.current.hideSuggestions();
-        }
-    };
+    const hideSuggestions = useCallback(() => {
+        suggestionsRef.current?.hideSuggestions();
+    }, []);
 
     const handleSendMessage = useCallback(() => {
         'worklet';
@@ -379,7 +374,7 @@ function ReportActionCompose({
         runOnJS(hideSuggestions)();
         setNativeProps(animatedRef, {text: ''}); // clears native text input on the UI thread
         runOnJS(submitForm)();
-    }, [isSendDisabled, resetFullComposerSize, submitForm, animatedRef, isReportReadyForDisplay]);
+    }, [isSendDisabled, hideSuggestions, resetFullComposerSize, submitForm, animatedRef, isReportReadyForDisplay]);
 
     const emojiShiftVertical = useMemo(() => {
         const chatItemComposeSecondaryRowHeight = styles.chatItemComposeSecondaryRow.height + styles.chatItemComposeSecondaryRow.marginTop + styles.chatItemComposeSecondaryRow.marginBottom;
@@ -442,7 +437,6 @@ function ReportActionCompose({
                                     />
                                     <ComposerWithSuggestions
                                         ref={composerRef}
-                                        hostComponentRef={hostComponentRef}
                                         animatedRef={animatedRef}
                                         suggestionsRef={suggestionsRef}
                                         isNextModalWillOpenRef={isNextModalWillOpenRef}
