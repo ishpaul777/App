@@ -1,4 +1,4 @@
-import type ForwardedRef from 'react';
+import type {ForwardedRef} from 'react';
 import React, {forwardRef, useCallback} from 'react';
 import {View} from 'react-native';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -68,7 +68,7 @@ const keyExtractor = (item: Mention) => item.alternateText;
 
 function MentionSuggestions(
     {prefix, mentions, highlightedMentionIndex = 0, onSelect, isMentionPickerLarge, measureParentContainerAndReportCursor = () => {}, resetSuggestions}: MentionSuggestionsProps,
-    ref: typeof ForwardedRef,
+    ref: ForwardedRef<View>,
 ) {
     const theme = useTheme();
     const styles = useThemeStyles();
