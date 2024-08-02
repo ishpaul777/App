@@ -59,6 +59,7 @@ function SuggestionEmoji(
     }: SuggestionEmojiProps,
     ref: ForwardedRef<SuggestionsRef>,
 ) {
+    const suggestionEmojiRef = useRef();
     const [suggestionValues, setSuggestionValues] = useState(defaultSuggestionsValues);
 
     const isEmojiSuggestionsMenuVisible = suggestionValues.suggestedEmojis.length > 0 && suggestionValues.shouldShowSuggestionMenu;
@@ -196,17 +197,22 @@ function SuggestionEmoji(
 
     const getIsSuggestionsMenuVisible = useCallback(() => isEmojiSuggestionsMenuVisible, [isEmojiSuggestionsMenuVisible]);
 
+    const hideSuggestions = useCallback(() => {
+        suggestionEmojiRef.current?.setNativeProps({opacity: 0});
+    }, []);
+
     useImperativeHandle(
         ref,
         () => ({
             resetSuggestions,
+            hideSuggestions,
             triggerHotkeyActions,
             setShouldBlockSuggestionCalc,
             updateShouldShowSuggestionMenuToFalse,
             getSuggestions,
             getIsSuggestionsMenuVisible,
         }),
-        [resetSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
+        [resetSuggestions, hideSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
     );
 
     if (!isEmojiSuggestionsMenuVisible) {
@@ -215,6 +221,7 @@ function SuggestionEmoji(
 
     return (
         <EmojiSuggestions
+            ref={suggestionEmojiRef}
             highlightedEmojiIndex={highlightedEmojiIndex}
             emojis={suggestionValues.suggestedEmojis}
             prefix={value.slice(suggestionValues.colonIndex + 1, selection.end)}

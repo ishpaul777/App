@@ -1,5 +1,5 @@
 import type {ReactElement} from 'react';
-import React, {useCallback} from 'react';
+import React, {forwardRef, useCallback} from 'react';
 import {View} from 'react-native';
 import type {Emoji} from '@assets/emojis/types';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -44,16 +44,19 @@ type EmojiSuggestionsProps = {
  */
 const keyExtractor = (item: Emoji, index: number): string => `${item.name}+${index}}`;
 
-function EmojiSuggestions({
-    emojis,
-    onSelect,
-    prefix,
-    isEmojiPickerLarge,
-    preferredSkinToneIndex,
-    highlightedEmojiIndex = 0,
-    measureParentContainerAndReportCursor = () => {},
-    resetSuggestions,
-}: EmojiSuggestionsProps) {
+function EmojiSuggestions(
+    {
+        emojis,
+        onSelect,
+        prefix,
+        isEmojiPickerLarge,
+        preferredSkinToneIndex,
+        highlightedEmojiIndex = 0,
+        measureParentContainerAndReportCursor = () => {},
+        resetSuggestions,
+    }: EmojiSuggestionsProps,
+    ref,
+) {
     const styles = useThemeStyles();
     const StyleUtils = useStyleUtils();
     /**
@@ -89,6 +92,7 @@ function EmojiSuggestions({
 
     return (
         <AutoCompleteSuggestions
+            ref={ref}
             suggestions={emojis}
             renderSuggestionMenuItem={renderSuggestionMenuItem}
             keyExtractor={keyExtractor}
@@ -104,4 +108,4 @@ function EmojiSuggestions({
 
 EmojiSuggestions.displayName = 'EmojiSuggestions';
 
-export default EmojiSuggestions;
+export default forwardRef(EmojiSuggestions);

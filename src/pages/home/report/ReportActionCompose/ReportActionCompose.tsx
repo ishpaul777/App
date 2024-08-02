@@ -55,6 +55,7 @@ type ComposerRef = {
 
 type SuggestionsRef = {
     resetSuggestions: () => void;
+    hideSuggestions: () => void;
     onSelectionChange?: (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => void;
     triggerHotkeyActions: (event: KeyboardEvent) => boolean | undefined;
     updateShouldShowSuggestionMenuToFalse: (shouldShowSuggestionMenu?: boolean) => void;
@@ -356,6 +357,10 @@ function ReportActionCompose({
 
     const isSendDisabled = isCommentEmpty || isBlockedFromConcierge || !!disabled || hasExceededMaxCommentLength;
 
+    const hideSuggestions = useCallback(() => {
+        suggestionsRef.current?.hideSuggestions();
+    }, []);
+
     const handleSendMessage = useCallback(() => {
         'worklet';
 
@@ -366,9 +371,10 @@ function ReportActionCompose({
         // We are setting the isCommentEmpty flag to true so the status of it will be in sync of the native text input state
         runOnJS(setIsCommentEmpty)(true);
         runOnJS(resetFullComposerSize)();
+        runOnJS(hideSuggestions)();
         setNativeProps(animatedRef, {text: ''}); // clears native text input on the UI thread
         runOnJS(submitForm)();
-    }, [isSendDisabled, resetFullComposerSize, submitForm, animatedRef, isReportReadyForDisplay]);
+    }, [isSendDisabled, hideSuggestions, resetFullComposerSize, submitForm, animatedRef, isReportReadyForDisplay]);
 
     const emojiShiftVertical = useMemo(() => {
         const chatItemComposeSecondaryRowHeight = styles.chatItemComposeSecondaryRow.height + styles.chatItemComposeSecondaryRow.marginTop + styles.chatItemComposeSecondaryRow.marginBottom;

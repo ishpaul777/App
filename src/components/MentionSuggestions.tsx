@@ -1,4 +1,5 @@
-import React, {useCallback} from 'react';
+import type {ForwardedRef} from 'react';
+import React, {forwardRef, useCallback} from 'react';
 import {View} from 'react-native';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
@@ -65,15 +66,10 @@ type MentionSuggestionsProps = {
  */
 const keyExtractor = (item: Mention) => item.alternateText;
 
-function MentionSuggestions({
-    prefix,
-    mentions,
-    highlightedMentionIndex = 0,
-    onSelect,
-    isMentionPickerLarge,
-    measureParentContainerAndReportCursor = () => {},
-    resetSuggestions,
-}: MentionSuggestionsProps) {
+function MentionSuggestions(
+    {prefix, mentions, highlightedMentionIndex = 0, onSelect, isMentionPickerLarge, measureParentContainerAndReportCursor = () => {}, resetSuggestions}: MentionSuggestionsProps,
+    ref: ForwardedRef<View>,
+) {
     const theme = useTheme();
     const styles = useThemeStyles();
     const StyleUtils = useStyleUtils();
@@ -152,6 +148,7 @@ function MentionSuggestions({
 
     return (
         <AutoCompleteSuggestions
+            ref={ref}
             suggestions={mentions}
             renderSuggestionMenuItem={renderSuggestionMenuItem}
             keyExtractor={keyExtractor}
@@ -167,6 +164,6 @@ function MentionSuggestions({
 
 MentionSuggestions.displayName = 'MentionSuggestions';
 
-export default MentionSuggestions;
+export default forwardRef(MentionSuggestions);
 
 export type {Mention};

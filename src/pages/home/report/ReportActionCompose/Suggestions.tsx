@@ -100,6 +100,11 @@ function Suggestions(
         suggestionMentionRef.current?.resetSuggestions();
     }, []);
 
+    const hideSuggestions = useCallback(() => {
+        suggestionEmojiRef.current?.hideSuggestions();
+        suggestionMentionRef.current?.hideSuggestions();
+    }, []);
+
     /**
      * Listens for keyboard shortcuts and applies the action
      */
@@ -134,6 +139,7 @@ function Suggestions(
         ref,
         () => ({
             resetSuggestions,
+            hideSuggestions,
             onSelectionChange,
             triggerHotkeyActions,
             updateShouldShowSuggestionMenuToFalse,
@@ -141,7 +147,16 @@ function Suggestions(
             getSuggestions,
             getIsSuggestionsMenuVisible,
         }),
-        [onSelectionChange, resetSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
+        [
+            onSelectionChange,
+            resetSuggestions,
+            hideSuggestions,
+            setShouldBlockSuggestionCalc,
+            triggerHotkeyActions,
+            updateShouldShowSuggestionMenuToFalse,
+            getSuggestions,
+            getIsSuggestionsMenuVisible,
+        ],
     );
 
     useEffect(() => {

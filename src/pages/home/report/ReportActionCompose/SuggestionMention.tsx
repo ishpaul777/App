@@ -3,6 +3,7 @@ import lodashMapValues from 'lodash/mapValues';
 import lodashSortBy from 'lodash/sortBy';
 import type {ForwardedRef} from 'react';
 import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from 'react';
+import type {View} from 'react-native';
 import type {OnyxCollection} from 'react-native-onyx';
 import {useOnyx} from 'react-native-onyx';
 import * as Expensicons from '@components/Icon/Expensicons';
@@ -85,6 +86,7 @@ function SuggestionMention(
     {value, selection, setSelection, updateComment, isAutoSuggestionPickerLarge, measureParentContainerAndReportCursor, isComposerFocused, isGroupPolicyReport, policyID}: SuggestionProps,
     ref: ForwardedRef<SuggestionsRef>,
 ) {
+    const suggestionMentionRef = useRef<View | null>(null);
     const personalDetails = usePersonalDetails() ?? CONST.EMPTY_OBJECT;
     const {translate, formatPhoneNumber} = useLocalize();
     const [suggestionValues, setSuggestionValues] = useState(defaultSuggestionsValues);
@@ -437,17 +439,22 @@ function SuggestionMention(
     const getSuggestions = useCallback(() => suggestionValues.suggestedMentions, [suggestionValues]);
     const getIsSuggestionsMenuVisible = useCallback(() => isMentionSuggestionsMenuVisible, [isMentionSuggestionsMenuVisible]);
 
+    const hideSuggestions = useCallback(() => {
+        suggestionMentionRef.current?.setNativeProps({opacity: 0});
+    }, []);
+
     useImperativeHandle(
         ref,
         () => ({
             resetSuggestions,
+            hideSuggestions,
             triggerHotkeyActions,
             setShouldBlockSuggestionCalc,
             updateShouldShowSuggestionMenuToFalse,
             getSuggestions,
             getIsSuggestionsMenuVisible,
         }),
-        [resetSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
+        [resetSuggestions, hideSuggestions, setShouldBlockSuggestionCalc, triggerHotkeyActions, updateShouldShowSuggestionMenuToFalse, getSuggestions, getIsSuggestionsMenuVisible],
     );
 
     if (!isMentionSuggestionsMenuVisible) {
@@ -456,6 +463,7 @@ function SuggestionMention(
 
     return (
         <MentionSuggestions
+            ref={suggestionMentionRef}
             highlightedMentionIndex={highlightedMentionIndex}
             mentions={suggestionValues.suggestedMentions}
             prefix={suggestionValues.mentionPrefix}
