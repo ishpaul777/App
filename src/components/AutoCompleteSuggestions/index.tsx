@@ -1,4 +1,6 @@
-import React, {useEffect} from 'react';
+import type {ForwardedRef} from 'react';
+import React, {forwardRef, useEffect} from 'react';
+import type {View} from 'react-native';
 import useKeyboardState from '@hooks/useKeyboardState';
 import useSafeAreaInsets from '@hooks/useSafeAreaInsets';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -47,7 +49,7 @@ const initialContainerState = {
  * The desired pattern for all platforms is to do nothing on long-press.
  * On the native platform, tapping on auto-complete suggestions will not blur the main input.
  */
-function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCursor = () => {}, ...props}: AutoCompleteSuggestionsProps<TSuggestion>) {
+function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCursor = () => {}, ...props}: AutoCompleteSuggestionsProps<TSuggestion>, ref: ForwardedRef<View>) {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const isInitialRender = React.useRef<boolean>(true);
     const isSuggestionMenuAboveRef = React.useRef<boolean>(false);
@@ -139,6 +141,7 @@ function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCu
     return (
         <AutoCompleteSuggestionsPortal
             // eslint-disable-next-line react/jsx-props-no-spreading
+            ref={ref}
             {...props}
             left={containerState.left}
             width={containerState.width}
@@ -150,4 +153,4 @@ function AutoCompleteSuggestions<TSuggestion>({measureParentContainerAndReportCu
 
 AutoCompleteSuggestions.displayName = 'AutoCompleteSuggestions';
 
-export default AutoCompleteSuggestions;
+export default forwardRef(AutoCompleteSuggestions);

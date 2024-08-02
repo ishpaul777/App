@@ -1,5 +1,5 @@
-import React from 'react';
-import type {ReactElement} from 'react';
+import React, {forwardRef} from 'react';
+import type {ForwardedRef, ReactElement} from 'react';
 import ReactDOM from 'react-dom';
 import {View} from 'react-native';
 import BaseAutoCompleteSuggestions from '@components/AutoCompleteSuggestions/BaseAutoCompleteSuggestions';
@@ -15,13 +15,10 @@ import type {AutoCompleteSuggestionsPortalProps} from './types';
  * On the native platform, tapping on auto-complete suggestions will not blur the main input.
  */
 
-function AutoCompleteSuggestionsPortal<TSuggestion>({
-    left = 0,
-    width = 0,
-    bottom = 0,
-    resetSuggestions = () => {},
-    ...props
-}: AutoCompleteSuggestionsPortalProps<TSuggestion>): ReactElement | null | false {
+function AutoCompleteSuggestionsPortal<TSuggestion>(
+    {left = 0, width = 0, bottom = 0, resetSuggestions = () => {}, ...props}: AutoCompleteSuggestionsPortalProps<TSuggestion>,
+    ref: ForwardedRef<View>,
+): ReactElement | null | false {
     const StyleUtils = useStyleUtils();
 
     const bodyElement = document.querySelector('body');
@@ -49,5 +46,5 @@ function AutoCompleteSuggestionsPortal<TSuggestion>({
 
 AutoCompleteSuggestionsPortal.displayName = 'AutoCompleteSuggestionsPortal';
 
-export default AutoCompleteSuggestionsPortal;
+export default forwardRef(AutoCompleteSuggestionsPortal);
 export type {AutoCompleteSuggestionsPortalProps};
