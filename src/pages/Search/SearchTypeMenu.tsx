@@ -10,7 +10,6 @@ import {usePersonalDetails} from '@components/OnyxProvider';
 import ScrollView from '@components/ScrollView';
 import type {SearchQueryJSON} from '@components/Search/types';
 import Text from '@components/Text';
-import ThreeDotsMenu from '@components/ThreeDotsMenu';
 import useDeleteSavedSearch from '@hooks/useDeleteSavedSearch';
 import useLocalize from '@hooks/useLocalize';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
@@ -29,6 +28,7 @@ import ROUTES from '@src/ROUTES';
 import type {SaveSearchItem} from '@src/types/onyx/SaveSearch';
 import type {SearchDataTypes} from '@src/types/onyx/SearchResults';
 import type IconAsset from '@src/types/utils/IconAsset';
+import SearchItemPopover from './SearchItemPopover';
 import SearchTypeMenuNarrow from './SearchTypeMenuNarrow';
 
 type SavedSearchMenuItem = MenuItemBaseProps & {
@@ -109,16 +109,7 @@ function SearchTypeMenu({queryJSON}: SearchTypeMenuProps) {
                     SearchActions.clearAllFilters();
                     Navigation.navigate(ROUTES.SEARCH_CENTRAL_PANE.getRoute({query: item?.query ?? ''}));
                 },
-                rightComponent: (
-                    <ThreeDotsMenu
-                        menuItems={getOverflowMenu(item.name, Number(key), item.query)}
-                        anchorPosition={{horizontal: 0, vertical: 380}}
-                        anchorAlignment={{
-                            horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
-                            vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
-                        }}
-                    />
-                ),
+                rightComponent: <SearchItemPopover menuItems={getOverflowMenu(item.name, Number(key), item.query)} />,
                 styles: [styles.alignItemsCenter],
             };
 
