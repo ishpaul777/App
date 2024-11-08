@@ -943,7 +943,7 @@ const styles = (theme: ThemeColors) =>
         badgeBordered: {
             backgroundColor: theme.transparent,
             borderWidth: 1,
-            borderRadius: variables.componentBorderRadiusSmall,
+            borderRadius: variables.componentBorderRadius,
             borderColor: theme.border,
             paddingHorizontal: 12,
             minHeight: 28,

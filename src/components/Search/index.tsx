@@ -20,6 +20,7 @@ import {turnOffMobileSelectionMode, turnOnMobileSelectionMode} from '@libs/actio
 import * as SearchActions from '@libs/actions/Search';
 import * as DeviceCapabilities from '@libs/DeviceCapabilities';
 import Log from '@libs/Log';
+import MigratedUserOnboardingModal from '@components/MigratedUserOnboardingModal';
 import memoize from '@libs/memoize';
 import isSearchTopmostCentralPane from '@libs/Navigation/isSearchTopmostCentralPane';
 import * as ReportUtils from '@libs/ReportUtils';
@@ -310,9 +311,11 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
 
     if (shouldShowEmptyState) {
         return (
-            <View style={[shouldUseNarrowLayout ? styles.searchListContentContainerStyles : styles.mt3, styles.flex1]}>
-                <EmptySearchView type={type} />
-            </View>
+            <><MigratedUserOnboardingModal
+                onClose={() => { } }
+                isVisible /><View style={[shouldUseNarrowLayout ? styles.searchListContentContainerStyles : styles.mt3, styles.flex1]}>
+                    <EmptySearchView type={type} />
+                </View></>
         );
     }
 
@@ -409,15 +412,16 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
     const shouldShowSorting = Array.isArray(status) ? status.some((s) => sortableSearchStatuses.includes(s)) : sortableSearchStatuses.includes(status);
 
     return (
-        <SelectionListWithModal<ReportListItemType | TransactionListItemType | ReportActionListItemType>
-            ref={handleSelectionListScroll(sortedSelectedData)}
-            sections={[{data: sortedSelectedData, isDisabled: false}]}
-            turnOnSelectionModeOnLongPress={type !== CONST.SEARCH.DATA_TYPES.CHAT}
-            onTurnOnSelectionMode={(item) => item && toggleTransaction(item)}
-            onCheckboxPress={toggleTransaction}
-            onSelectAll={toggleAllTransactions}
-            customListHeader={
-                !isLargeScreenWidth ? null : (
+        <><MigratedUserOnboardingModal
+            onClose={() => { } }
+            isVisible /><SelectionListWithModal<ReportListItemType | TransactionListItemType | ReportActionListItemType>
+                ref={handleSelectionListScroll(sortedSelectedData)}
+                sections={[{ data: sortedSelectedData, isDisabled: false }]}
+                turnOnSelectionModeOnLongPress={type !== CONST.SEARCH.DATA_TYPES.CHAT}
+                onTurnOnSelectionMode={(item) => item && toggleTransaction(item)}
+                onCheckboxPress={toggleTransaction}
+                onSelectAll={toggleAllTransactions}
+                customListHeader={!isLargeScreenWidth ? null : (
                     <SearchTableHeader
                         data={searchResults?.data}
                         metadata={searchResults?.search}
@@ -425,53 +429,45 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
                         sortOrder={sortOrder}
                         sortBy={sortBy}
                         shouldShowYear={shouldShowYear}
-                        shouldShowSorting={shouldShowSorting}
-                    />
-                )
-            }
-            isSelected={(item) =>
-                status !== CONST.SEARCH.STATUS.EXPENSE.ALL && SearchUIUtils.isReportListItemType(item)
+                        shouldShowSorting={shouldShowSorting} />
+                )}
+                isSelected={(item) => status !== CONST.SEARCH.STATUS.EXPENSE.ALL && SearchUIUtils.isReportListItemType(item)
                     ? item.transactions.some((transaction) => selectedTransactions[transaction.keyForList]?.isSelected)
-                    : !!item.isSelected
-            }
-            shouldAutoTurnOff={false}
-            onScroll={onSearchListScroll}
-            canSelectMultiple={type !== CONST.SEARCH.DATA_TYPES.CHAT && canSelectMultiple}
-            customListHeaderHeight={searchHeaderHeight}
-            // To enhance the smoothness of scrolling and minimize the risk of encountering blank spaces during scrolling,
-            // we have configured a larger windowSize and a longer delay between batch renders.
-            // The windowSize determines the number of items rendered before and after the currently visible items.
-            // A larger windowSize helps pre-render more items, reducing the likelihood of blank spaces appearing.
-            // The updateCellsBatchingPeriod sets the delay (in milliseconds) between rendering batches of cells.
-            // A longer delay allows the UI to handle rendering in smaller increments, which can improve performance and smoothness.
-            // For more information, refer to the React Native documentation:
-            // https://reactnative.dev/docs/0.73/optimizing-flatlist-configuration#windowsize
-            // https://reactnative.dev/docs/0.73/optimizing-flatlist-configuration#updatecellsbatchingperiod
-            windowSize={111}
-            updateCellsBatchingPeriod={200}
-            ListItem={ListItem}
-            onSelectRow={openReport}
-            getItemHeight={getItemHeightMemoized}
-            shouldSingleExecuteRowSelect
-            shouldPreventDefaultFocusOnSelectRow={!DeviceCapabilities.canUseTouchScreen()}
-            shouldPreventDefault={false}
-            listHeaderWrapperStyle={[styles.ph8, styles.pt3]}
-            containerStyle={[styles.pv0, type === CONST.SEARCH.DATA_TYPES.CHAT && !isSmallScreenWidth && styles.pt3]}
-            showScrollIndicator={false}
-            onEndReachedThreshold={0.75}
-            onEndReached={fetchMoreResults}
-            listFooterContent={
-                shouldShowLoadingMoreItems ? (
+                    : !!item.isSelected}
+                shouldAutoTurnOff={false}
+                onScroll={onSearchListScroll}
+                canSelectMultiple={type !== CONST.SEARCH.DATA_TYPES.CHAT && canSelectMultiple}
+                customListHeaderHeight={searchHeaderHeight}
+                // To enhance the smoothness of scrolling and minimize the risk of encountering blank spaces during scrolling,
+                // we have configured a larger windowSize and a longer delay between batch renders.
+                // The windowSize determines the number of items rendered before and after the currently visible items.
+                // A larger windowSize helps pre-render more items, reducing the likelihood of blank spaces appearing.
+                // The updateCellsBatchingPeriod sets the delay (in milliseconds) between rendering batches of cells.
+                // A longer delay allows the UI to handle rendering in smaller increments, which can improve performance and smoothness.
+                // For more information, refer to the React Native documentation:
+                // https://reactnative.dev/docs/0.73/optimizing-flatlist-configuration#windowsize
+                // https://reactnative.dev/docs/0.73/optimizing-flatlist-configuration#updatecellsbatchingperiod
+                windowSize={111}
+                updateCellsBatchingPeriod={200}
+                ListItem={ListItem}
+                onSelectRow={openReport}
+                getItemHeight={getItemHeightMemoized}
+                shouldSingleExecuteRowSelect
+                shouldPreventDefaultFocusOnSelectRow={!DeviceCapabilities.canUseTouchScreen()}
+                shouldPreventDefault={false}
+                listHeaderWrapperStyle={[styles.ph8, styles.pt3]}
+                containerStyle={[styles.pv0, type === CONST.SEARCH.DATA_TYPES.CHAT && !isSmallScreenWidth && styles.pt3]}
+                showScrollIndicator={false}
+                onEndReachedThreshold={0.75}
+                onEndReached={fetchMoreResults}
+                listFooterContent={shouldShowLoadingMoreItems ? (
                     <SearchRowSkeleton
                         shouldAnimate
-                        fixedNumItems={5}
-                    />
-                ) : undefined
-            }
-            contentContainerStyle={[contentContainerStyle, styles.pb3]}
-            scrollEventThrottle={1}
-            shouldKeepFocusedItemAtTopOfViewableArea={type === CONST.SEARCH.DATA_TYPES.CHAT}
-        />
+                        fixedNumItems={5} />
+                ) : undefined}
+                contentContainerStyle={[contentContainerStyle, styles.pb3]}
+                scrollEventThrottle={1}
+                shouldKeepFocusedItemAtTopOfViewableArea={type === CONST.SEARCH.DATA_TYPES.CHAT} /></>
     );
 }
 

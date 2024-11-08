@@ -1,6 +1,7 @@
 import type {StackScreenProps} from '@react-navigation/stack';
 import React, {useMemo} from 'react';
 import FullPageNotFoundView from '@components/BlockingViews/FullPageNotFoundView';
+import MigratedUserOnboardingModal from '@components/MigratedUserOnboardingModal';
 import ScreenWrapper from '@components/ScreenWrapper';
 import Search from '@components/Search';
 import SearchPageHeader from '@components/Search/SearchPageHeader';
@@ -51,6 +52,10 @@ function SearchPage({route}: SearchPageProps) {
                         <Search queryJSON={queryJSON} />
                     </>
                 )}
+                <MigratedUserOnboardingModal
+                    onClose={() => {}}
+                    isVisible
+                />
             </FullPageNotFoundView>
         </ScreenWrapper>
     );

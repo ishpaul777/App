@@ -65,6 +65,9 @@ type FeatureListProps = {
 
     /** Padding for content on large screens */
     contentPaddingOnLargeScreens?: {padding: number};
+
+    /** Additional styles to apply to the container */
+    containerStyles?: StyleProp<ViewStyle>;
 };
 
 function FeatureList({
@@ -82,6 +85,7 @@ function FeatureList({
     illustrationStyle,
     illustrationBackgroundColor,
     illustrationContainerStyle,
+    containerStyles = [],
     titleStyles,
     contentPaddingOnLargeScreens,
 }: FeatureListProps) {
@@ -100,6 +104,7 @@ function FeatureList({
             titleStyles={titleStyles}
             illustrationContainerStyle={illustrationContainerStyle}
             contentPaddingOnLargeScreens={contentPaddingOnLargeScreens}
+            containerStyles={containerStyles}
         >
             <View style={styles.flex1}>
                 <View style={[styles.flex1, styles.flexRow, styles.flexWrap, styles.rowGap4, styles.pv4, styles.pl1]}>
