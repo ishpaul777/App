@@ -5,6 +5,7 @@ import * as API from '@libs/API';
 import {SIDE_EFFECT_REQUEST_COMMANDS, WRITE_COMMANDS} from '@libs/API/types';
 import Log from '@libs/Log';
 import type {OnboardingCompanySizeType, OnboardingPurposeType} from '@src/CONST';
+import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import type Onboarding from '@src/types/onyx/Onboarding';
 import type TryNewDot from '@src/types/onyx/TryNewDot';
@@ -198,6 +199,36 @@ function setSelfTourViewed() {
     API.write(WRITE_COMMANDS.SELF_TOUR_VIEWED, null, {optimisticData});
 }
 
+function setNudgeMigratedUserWelcomeModalViewed() {
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.NUDGE_MIGRATION_WELCOME_MODAL]: new Date(),
+    });
+}
+
+function setMigratedUserFilterTooltipViewed() {
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP]: new Date(),
+    });
+}
+
+function setMigratedUserInboxTooltipViewed() {
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP]: new Date(),
+    });
+}
+
+function setMigratedUserWorkspaceChatTooltipViewed() {
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP]: new Date(),
+    });
+}
+
+function setMigratedUserGlobalCreateTooltipViewed() {
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP]: new Date(),
+    });
+}
+
 export {
     onServerDataReady,
     isOnboardingFlowCompleted,
@@ -211,4 +242,9 @@ export {
     setOnboardingErrorMessage,
     setOnboardingCompanySize,
     setSelfTourViewed,
+    setNudgeMigratedUserWelcomeModalViewed,
+    setMigratedUserFilterTooltipViewed,
+    setMigratedUserInboxTooltipViewed,
+    setMigratedUserWorkspaceChatTooltipViewed,
+    setMigratedUserGlobalCreateTooltipViewed,
 };

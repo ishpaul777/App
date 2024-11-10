@@ -6,11 +6,14 @@ import * as Expensicons from '@components/Icon/Expensicons';
 import {PressableWithFeedback} from '@components/Pressable';
 import type {SearchQueryString} from '@components/Search/types';
 import Text from '@components/Text';
+import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import useActiveWorkspace from '@hooks/useActiveWorkspace';
 import useCurrentReportID from '@hooks/useCurrentReportID';
 import useLocalize from '@hooks/useLocalize';
+import useProductTour from '@hooks/useProductTour';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
+import {setMigratedUserInboxTooltipViewed} from '@libs/actions/Welcome';
 import interceptAnonymousUser from '@libs/interceptAnonymousUser';
 import Navigation from '@libs/Navigation/Navigation';
 import type {AuthScreensParamList, RootStackParamList, State} from '@libs/Navigation/types';
@@ -77,6 +80,7 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
     const [chatTabBrickRoad, setChatTabBrickRoad] = useState<BrickRoad>(
         getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations),
     );
+    const {renderProductTourElement, shouldShowBottomNavInboxTooltip} = useProductTour();
 
     useEffect(() => {
         setChatTabBrickRoad(getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations));
@@ -136,30 +140,49 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
                 />
             )}
             <View style={styles.bottomTabBarContainer}>
-                <PressableWithFeedback
-                    onPress={navigateToChats}
-                    role={CONST.ROLE.BUTTON}
-                    accessibilityLabel={translate('common.inbox')}
-                    wrapperStyle={styles.flex1}
-                    style={styles.bottomTabBarItem}
+                <EducationalTooltip
+                    shouldRender={shouldShowBottomNavInboxTooltip}
+                    anchorAlignment={{
+                        horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER,
+                        vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
+                    }}
+                    renderTooltipContent={() => renderProductTourElement(CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP)}
+                    wrapperStyle={styles.quickActionTooltipWrapper}
+                    onHideTooltip={setMigratedUserInboxTooltipViewed}
+                    shouldUseOverlay
+                    shouldTargetBePressable
                 >
-                    <View>
-                        <Icon
-                            src={Expensicons.Inbox}
-                            fill={selectedTab === SCREENS.HOME ? theme.iconMenu : theme.icon}
-                            width={variables.iconBottomBar}
-                            height={variables.iconBottomBar}
-                        />
-                        {!!chatTabBrickRoad && (
-                            <View style={styles.bottomTabStatusIndicator(chatTabBrickRoad === CONST.BRICK_ROAD_INDICATOR_STATUS.INFO ? theme.iconSuccessFill : theme.danger)} />
-                        )}
-                    </View>
-                    <Text
-                        style={[styles.textSmall, styles.textAlignCenter, styles.mt1Half, selectedTab === SCREENS.HOME ? styles.textBold : styles.textSupporting, styles.bottomTabBarLabel]}
+                    <PressableWithFeedback
+                        onPress={navigateToChats}
+                        role={CONST.ROLE.BUTTON}
+                        accessibilityLabel={translate('common.inbox')}
+                        wrapperStyle={styles.flex1}
+                        style={styles.bottomTabBarItem}
                     >
-                        {translate('common.inbox')}
-                    </Text>
-                </PressableWithFeedback>
+                        <View>
+                            <Icon
+                                src={Expensicons.Inbox}
+                                fill={selectedTab === SCREENS.HOME ? theme.iconMenu : theme.icon}
+                                width={variables.iconBottomBar}
+                                height={variables.iconBottomBar}
+                            />
+                            {!!chatTabBrickRoad && (
+                                <View style={styles.bottomTabStatusIndicator(chatTabBrickRoad === CONST.BRICK_ROAD_INDICATOR_STATUS.INFO ? theme.iconSuccessFill : theme.danger)} />
+                            )}
+                        </View>
+                        <Text
+                            style={[
+                                styles.textSmall,
+                                styles.textAlignCenter,
+                                styles.mt1Half,
+                                selectedTab === SCREENS.HOME ? styles.textBold : styles.textSupporting,
+                                styles.bottomTabBarLabel,
+                            ]}
+                        >
+                            {translate('common.inbox')}
+                        </Text>
+                    </PressableWithFeedback>
+                </EducationalTooltip>
                 <PressableWithFeedback
                     onPress={navigateToSearch}
                     role={CONST.ROLE.BUTTON}

@@ -42,6 +42,9 @@ type SharedTooltipProps = {
 
     /** Handles what to do when hiding the tooltip */
     onHideTooltip?: () => void;
+
+    /** Whether the target should be pressable */
+    shouldTargetBePressable?: boolean;
 };
 
 type GenericTooltipState = {

@@ -50,9 +50,9 @@ function MigratedUserOnboardingModal({onClose, isVisible}: DecisionModalProps) {
                 menuItems={workspaceFeatures}
                 title={translate('workspace.emptyWorkspace.title')}
                 subtitle={translate('workspace.emptyWorkspace.subtitle')}
-                ctaText={translate('workspace.new.newWorkspace')}
-                ctaAccessibilityLabel={translate('workspace.new.newWorkspace')}
-                // onCtaPress={() => interceptAnonymousUser(() => App.createWorkspaceWithPolicyDraftAndNavigateToIt())}
+                ctaText={"Let's get started"}
+                ctaAccessibilityLabel={"Let's get started"}
+                onCtaPress={onClose}
                 illustration={LottieAnimations.WorkspacePlanet}
                 illustrationContainerStyle={[StyleUtils.getBorderRadiusStyle(variables.componentBorderRadiusLarge)]}
                 titleStyles={styles.textHeadlineH1}

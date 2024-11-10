@@ -6,6 +6,7 @@ import type {NativeScrollEvent, NativeSyntheticEvent, StyleProp, ViewStyle} from
 import type {OnyxEntry} from 'react-native-onyx';
 import {useOnyx} from 'react-native-onyx';
 import FullPageOfflineBlockingView from '@components/BlockingViews/FullPageOfflineBlockingView';
+import MigratedUserOnboardingModal from '@components/MigratedUserOnboardingModal';
 import SearchTableHeader from '@components/SelectionList/SearchTableHeader';
 import type {ReportActionListItemType, ReportListItemType, TransactionListItemType} from '@components/SelectionList/types';
 import SelectionListWithModal from '@components/SelectionListWithModal';
@@ -13,14 +14,15 @@ import SearchRowSkeleton from '@components/Skeletons/SearchRowSkeleton';
 import useMobileSelectionMode from '@hooks/useMobileSelectionMode';
 import useNetwork from '@hooks/useNetwork';
 import usePrevious from '@hooks/usePrevious';
+import useProductTour from '@hooks/useProductTour';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useSearchHighlightAndScroll from '@hooks/useSearchHighlightAndScroll';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {turnOffMobileSelectionMode, turnOnMobileSelectionMode} from '@libs/actions/MobileSelectionMode';
 import * as SearchActions from '@libs/actions/Search';
+import * as WelcomeActions from '@libs/actions/Welcome';
 import * as DeviceCapabilities from '@libs/DeviceCapabilities';
 import Log from '@libs/Log';
-import MigratedUserOnboardingModal from '@components/MigratedUserOnboardingModal';
 import memoize from '@libs/memoize';
 import isSearchTopmostCentralPane from '@libs/Navigation/isSearchTopmostCentralPane';
 import * as ReportUtils from '@libs/ReportUtils';
@@ -101,6 +103,7 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
         useSearchContext();
     const {selectionMode} = useMobileSelectionMode(false);
     const [offset, setOffset] = useState(0);
+    const {shouldShowMigratedUserOnboardingModal} = useProductTour();
 
     const {type, status, sortBy, sortOrder, hash} = queryJSON;
 
@@ -311,11 +314,15 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
 
     if (shouldShowEmptyState) {
         return (
-            <><MigratedUserOnboardingModal
-                onClose={() => { } }
-                isVisible /><View style={[shouldUseNarrowLayout ? styles.searchListContentContainerStyles : styles.mt3, styles.flex1]}>
+            <>
+                <MigratedUserOnboardingModal
+                    onClose={WelcomeActions.setNudgeMigratedUserWelcomeModalViewed}
+                    isVisible={shouldShowMigratedUserOnboardingModal}
+                />
+                <View style={[shouldUseNarrowLayout ? styles.searchListContentContainerStyles : styles.mt3, styles.flex1]}>
                     <EmptySearchView type={type} />
-                </View></>
+                </View>
+            </>
         );
     }
 
@@ -412,28 +419,36 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
     const shouldShowSorting = Array.isArray(status) ? status.some((s) => sortableSearchStatuses.includes(s)) : sortableSearchStatuses.includes(status);
 
     return (
-        <><MigratedUserOnboardingModal
-            onClose={() => { } }
-            isVisible /><SelectionListWithModal<ReportListItemType | TransactionListItemType | ReportActionListItemType>
+        <>
+            <MigratedUserOnboardingModal
+                onClose={WelcomeActions.setNudgeMigratedUserWelcomeModalViewed}
+                isVisible={shouldShowMigratedUserOnboardingModal}
+            />
+            <SelectionListWithModal<ReportListItemType | TransactionListItemType | ReportActionListItemType>
                 ref={handleSelectionListScroll(sortedSelectedData)}
-                sections={[{ data: sortedSelectedData, isDisabled: false }]}
+                sections={[{data: sortedSelectedData, isDisabled: false}]}
                 turnOnSelectionModeOnLongPress={type !== CONST.SEARCH.DATA_TYPES.CHAT}
                 onTurnOnSelectionMode={(item) => item && toggleTransaction(item)}
                 onCheckboxPress={toggleTransaction}
                 onSelectAll={toggleAllTransactions}
-                customListHeader={!isLargeScreenWidth ? null : (
-                    <SearchTableHeader
-                        data={searchResults?.data}
-                        metadata={searchResults?.search}
-                        onSortPress={onSortPress}
-                        sortOrder={sortOrder}
-                        sortBy={sortBy}
-                        shouldShowYear={shouldShowYear}
-                        shouldShowSorting={shouldShowSorting} />
-                )}
-                isSelected={(item) => status !== CONST.SEARCH.STATUS.EXPENSE.ALL && SearchUIUtils.isReportListItemType(item)
-                    ? item.transactions.some((transaction) => selectedTransactions[transaction.keyForList]?.isSelected)
-                    : !!item.isSelected}
+                customListHeader={
+                    !isLargeScreenWidth ? null : (
+                        <SearchTableHeader
+                            data={searchResults?.data}
+                            metadata={searchResults?.search}
+                            onSortPress={onSortPress}
+                            sortOrder={sortOrder}
+                            sortBy={sortBy}
+                            shouldShowYear={shouldShowYear}
+                            shouldShowSorting={shouldShowSorting}
+                        />
+                    )
+                }
+                isSelected={(item) =>
+                    status !== CONST.SEARCH.STATUS.EXPENSE.ALL && SearchUIUtils.isReportListItemType(item)
+                        ? item.transactions.some((transaction) => selectedTransactions[transaction.keyForList]?.isSelected)
+                        : !!item.isSelected
+                }
                 shouldAutoTurnOff={false}
                 onScroll={onSearchListScroll}
                 canSelectMultiple={type !== CONST.SEARCH.DATA_TYPES.CHAT && canSelectMultiple}
@@ -460,14 +475,19 @@ function Search({queryJSON, onSearchListScroll, contentContainerStyle}: SearchPr
                 showScrollIndicator={false}
                 onEndReachedThreshold={0.75}
                 onEndReached={fetchMoreResults}
-                listFooterContent={shouldShowLoadingMoreItems ? (
-                    <SearchRowSkeleton
-                        shouldAnimate
-                        fixedNumItems={5} />
-                ) : undefined}
+                listFooterContent={
+                    shouldShowLoadingMoreItems ? (
+                        <SearchRowSkeleton
+                            shouldAnimate
+                            fixedNumItems={5}
+                        />
+                    ) : undefined
+                }
                 contentContainerStyle={[contentContainerStyle, styles.pb3]}
                 scrollEventThrottle={1}
-                shouldKeepFocusedItemAtTopOfViewableArea={type === CONST.SEARCH.DATA_TYPES.CHAT} /></>
+                shouldKeepFocusedItemAtTopOfViewableArea={type === CONST.SEARCH.DATA_TYPES.CHAT}
+            />
+        </>
     );
 }
 

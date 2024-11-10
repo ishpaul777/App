@@ -5260,6 +5260,19 @@ const translations = {
         takeATwoMinuteTour: 'Take a 2-minute tour',
         exploreExpensify: 'Explore everything Expensify has to offer',
     },
+    nudgemigrationProductTour: {
+        welcomeModal: '💡 Welcome to the new workspace! 🎉',
+        filterButton: {
+            bold: 'Customize your search',
+            regular: 'here!',
+        },
+        bottomNavInbox: {
+            bold: 'Your to-do list',
+            regular: ' comes with 🟢 for actions to take and 🔴 for errors',
+        },
+        workspaceChat: 'Review submitted expenses and chat with approvers in your workspace chat',
+        globalCreate: 'Where to create expenses, start chatting, and more',
+    },
 };
 
 export default translations satisfies TranslationDeepObject<typeof translations>;

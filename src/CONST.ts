@@ -6219,6 +6219,13 @@ const CONST = {
         HAS_VIOLATIONS: 'hasViolations',
         HAS_TRANSACTION_THREAD_VIOLATIONS: 'hasTransactionThreadViolations',
     },
+    MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS: {
+        NUDGE_MIGRATION_WELCOME_MODAL: 'nudgeMigrationWelcomeModal',
+        FILTER_BUTTON_TOOLTIP: 'filterButtonTooltip',
+        BOTTOM_NAV_INBOX_TOOLTIP: 'bottomNavInboxTooltip',
+        WORKSPACE_CHAT_LHN_TOOLTIP: 'workspaceChatLHNTooltip',
+        GLOBAL_CREATE_TOOLTIP: 'globalCreateTooltip',
+    },
 } as const;
 
 type Country = keyof typeof CONST.ALL_COUNTRIES;
