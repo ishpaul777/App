@@ -58,8 +58,11 @@ const PRODUCT_TOUR_FLOWS = {
         },
         [BOTTOM_NAV_INBOX_TOOLTIP]: {
             text: [
-                {translationKey: 'nudgemigrationProductTour.bottomNavInbox.bold', isBold: true},
-                {translationKey: 'nudgemigrationProductTour.bottomNavInbox.regular', isBold: false},
+                [
+                    {translationKey: 'nudgemigrationProductTour.bottomNavInbox.bold', isBold: true},
+                    {translationKey: 'nudgemigrationProductTour.bottomNavInbox.regular.part1', isBold: false},
+                ],
+                {translationKey: 'nudgemigrationProductTour.bottomNavInbox.regular.part2', isBold: false},
             ],
             onHideElement: setMigratedUserInboxTooltipViewed,
             name: BOTTOM_NAV_INBOX_TOOLTIP,
@@ -143,14 +146,24 @@ function ProductTourProvider({children}: ChildrenProps) {
                         medium
                     />
                     <View style={[styles.flexColumn]}>
-                        {element.text.map((part) => (
-                            <Text
-                                key={part.translationKey}
-                                style={part.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}
-                            >
-                                {translate(part.translationKey as TranslationPaths)}
-                            </Text>
-                        ))}
+                        {element.text.map((part) => {
+                            if (Array.isArray(part)) {
+                                return (
+                                    <Text style={styles.quickActionTooltipSubtitle}>
+                                        {part.map((subPart) => (
+                                            <Text style={subPart.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}>
+                                                {translate(subPart.translationKey as TranslationPaths)}
+                                            </Text>
+                                        ))}
+                                    </Text>
+                                );
+                            }
+                            return (
+                                <Text style={part.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}>
+                                    {translate(part.translationKey as TranslationPaths)}
+                                </Text>
+                            );
+                        })}
                     </View>
                 </View>
             );

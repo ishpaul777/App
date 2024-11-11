@@ -5268,7 +5268,10 @@ const translations = {
         },
         bottomNavInbox: {
             bold: 'Your to-do list',
-            regular: ' comes with 🟢 for actions to take and 🔴 for errors',
+            regular: {
+                part1: 'comes with 🟢 for',
+                part2: 'actions to take and 🔴 for errors',
+            },
         },
         workspaceChat: 'Review submitted expenses and chat with approvers in your workspace chat',
         globalCreate: 'Where to create expenses, start chatting, and more',
