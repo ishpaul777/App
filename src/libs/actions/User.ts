@@ -1343,7 +1343,9 @@ function dismissWorkspaceTooltip() {
 }
 
 function dismissGBRTooltip() {
-    Onyx.merge(ONYXKEYS.NVP_SHOULD_HIDE_GBR_TOOLTIP, true);
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP]: new Date(),
+    });
 }
 
 function requestRefund() {

@@ -6219,7 +6219,8 @@ const CONST = {
         HAS_VIOLATIONS: 'hasViolations',
         HAS_TRANSACTION_THREAD_VIOLATIONS: 'hasTransactionThreadViolations',
     },
-    MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS: {
+    PRODUCT_TRAINING_ELEMENTS: {
+        CONCIERGE_GBR_TOOLTIP: 'conciergeGBRTooltip',
         NUDGE_MIGRATION_WELCOME_MODAL: 'nudgeMigrationWelcomeModal',
         FILTER_BUTTON_TOOLTIP: 'filterButtonTooltip',
         BOTTOM_NAV_INBOX_TOOLTIP: 'bottomNavInboxTooltip',

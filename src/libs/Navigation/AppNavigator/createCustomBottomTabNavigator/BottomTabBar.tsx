@@ -80,6 +80,7 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
     const [chatTabBrickRoad, setChatTabBrickRoad] = useState<BrickRoad>(
         getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations),
     );
+
     const {renderProductTourElement, shouldShowBottomNavInboxTooltip} = useProductTour();
 
     useEffect(() => {
@@ -89,12 +90,15 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
     }, [activeWorkspaceID, transactionViolations, reports, reportActions, betas, policies, priorityMode, currentReportID]);
 
     const navigateToChats = useCallback(() => {
+        if (shouldShowBottomNavInboxTooltip) {
+            setMigratedUserInboxTooltipViewed();
+        }
         if (selectedTab === SCREENS.HOME) {
             return;
         }
         const route = activeWorkspaceID ? (`/w/${activeWorkspaceID}/${ROUTES.HOME}` as Route) : ROUTES.HOME;
         Navigation.navigate(route);
-    }, [activeWorkspaceID, selectedTab]);
+    }, [activeWorkspaceID, shouldShowBottomNavInboxTooltip, selectedTab]);
 
     const navigateToSearch = useCallback(() => {
         if (selectedTab === SCREENS.SEARCH.BOTTOM_TAB) {
@@ -146,11 +150,10 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
                         horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER,
                         vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
                     }}
-                    renderTooltipContent={() => renderProductTourElement(CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP)}
+                    renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP)}
                     wrapperStyle={styles.quickActionTooltipWrapper}
                     onHideTooltip={setMigratedUserInboxTooltipViewed}
-                    shouldUseOverlay
-                    shouldTargetBePressable
+                    // shouldAutoDismiss
                 >
                     <PressableWithFeedback
                         onPress={navigateToChats}

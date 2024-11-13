@@ -12,14 +12,17 @@ import PressableWithFeedback from '@components/Pressable/PressableWithFeedback';
 import type {SearchQueryJSON} from '@components/Search/types';
 import Text from '@components/Text';
 import ThreeDotsMenu from '@components/ThreeDotsMenu';
+import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import useDeleteSavedSearch from '@hooks/useDeleteSavedSearch';
 import useLocalize from '@hooks/useLocalize';
+import useProductTour from '@hooks/useProductTour';
 import useSingleExecution from '@hooks/useSingleExecution';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import useWindowDimensions from '@hooks/useWindowDimensions';
 import * as SearchActions from '@libs/actions/Search';
+import {setMigratedUserFilterTooltipViewed} from '@libs/actions/Welcome';
 import Navigation from '@libs/Navigation/Navigation';
 import {getAllTaxRates} from '@libs/PolicyUtils';
 import * as SearchQueryUtils from '@libs/SearchQueryUtils';
@@ -66,9 +69,14 @@ function SearchTypeMenuNarrow({typeMenuItems, activeItemIndex, queryJSON, title,
     const [isPopoverVisible, setIsPopoverVisible] = useState(false);
     const buttonRef = useRef<HTMLDivElement>(null);
 
+    const {renderProductTourElement, shouldShowFilterButtonTooltip} = useProductTour();
+
     const openMenu = useCallback(() => setIsPopoverVisible(true), []);
     const closeMenu = useCallback(() => setIsPopoverVisible(false), []);
     const onPress = () => {
+        if (shouldShowFilterButtonTooltip) {
+            setMigratedUserFilterTooltipViewed();
+        }
         const values = SearchQueryUtils.buildFilterFormValuesFromQuery(queryJSON, policyCategories, policyTagsLists, currencyList, personalDetails, cardList, reports, taxRates);
         SearchActions.updateAdvancedFilters(values);
         Navigation.navigate(ROUTES.SEARCH_ADVANCED_FILTERS);
@@ -198,10 +206,21 @@ function SearchTypeMenuNarrow({typeMenuItems, activeItemIndex, queryJSON, title,
                     </Animated.View>
                 )}
             </PressableWithFeedback>
-            <Button
-                icon={Expensicons.Filters}
-                onPress={onPress}
-            />
+            <EducationalTooltip
+                shouldRender={shouldShowFilterButtonTooltip}
+                anchorAlignment={{
+                    vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
+                    horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER,
+                }}
+                renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP)}
+                wrapperStyle={styles.quickActionTooltipWrapper}
+                // onHideTooltip={setMigratedUserFilterTooltipViewed}
+            >
+                <Button
+                    icon={Expensicons.Filters}
+                    onPress={onPress}
+                />
+            </EducationalTooltip>
             <PopoverMenu
                 menuItems={allMenuItems as PopoverMenuItem[]}
                 isVisible={isPopoverVisible}

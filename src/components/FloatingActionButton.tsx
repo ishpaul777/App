@@ -5,10 +5,15 @@ import type {GestureResponderEvent, Role, Text, View} from 'react-native';
 import {Platform} from 'react-native';
 import Animated, {createAnimatedPropAdapter, Easing, interpolateColor, processColor, useAnimatedProps, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
 import Svg, {Path} from 'react-native-svg';
+import useProductTour from '@hooks/useProductTour';
+import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
+import {setMigratedUserGlobalCreateTooltipViewed} from '@libs/actions/Welcome';
 import variables from '@styles/variables';
+import CONST from '@src/CONST';
 import {PressableWithoutFeedback} from './Pressable';
+import EducationalTooltip from './Tooltip/EducationalTooltip';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 AnimatedPath.displayName = 'AnimatedPath';
@@ -54,10 +59,12 @@ type FloatingActionButtonProps = {
 function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: FloatingActionButtonProps, ref: ForwardedRef<HTMLDivElement | View | Text>) {
     const {success, buttonDefaultBG, textLight, textDark} = useTheme();
     const styles = useThemeStyles();
+    const {shouldUseNarrowLayout} = useResponsiveLayout();
     const borderRadius = styles.floatingActionButton.borderRadius;
     const fabPressable = useRef<HTMLDivElement | View | Text | null>(null);
     const sharedValue = useSharedValue(isActive ? 1 : 0);
     const buttonRef = ref;
+    const {renderProductTourElement, shouldShowGlobalCreateTooltip} = useProductTour();
 
     useEffect(() => {
         // eslint-disable-next-line react-compiler/react-compiler
@@ -90,38 +97,52 @@ function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: Flo
     );
 
     const toggleFabAction = (event: GestureResponderEvent | KeyboardEvent | undefined) => {
+        if (shouldShowGlobalCreateTooltip) {
+            setMigratedUserGlobalCreateTooltipViewed();
+        }
         // Drop focus to avoid blue focus ring.
         fabPressable.current?.blur();
         onPress(event);
     };
 
     return (
-        <PressableWithoutFeedback
-            ref={(el) => {
-                fabPressable.current = el ?? null;
-                if (buttonRef && 'current' in buttonRef) {
-                    buttonRef.current = el ?? null;
-                }
+        <EducationalTooltip
+            shouldRender={shouldShowGlobalCreateTooltip}
+            anchorAlignment={{
+                horizontal: shouldUseNarrowLayout ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
+                vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
             }}
-            style={[styles.h100, styles.bottomTabBarItem]}
-            accessibilityLabel={accessibilityLabel}
-            onPress={toggleFabAction}
-            onLongPress={() => {}}
-            role={role}
-            shouldUseHapticsOnLongPress={false}
+            renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP)}
+            wrapperStyle={styles.quickActionTooltipWrapper}
+            // onHideTooltip={setMigratedUserGlobalCreateTooltipViewed}
         >
-            <Animated.View style={[styles.floatingActionButton, animatedStyle]}>
-                <Svg
-                    width={variables.iconSizeNormal}
-                    height={variables.iconSizeNormal}
-                >
-                    <AnimatedPath
-                        d="M12,3c0-1.1-0.9-2-2-2C8.9,1,8,1.9,8,3v5H3c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2h5v5c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2v-5h5c1.1,0,2-0.9,2-2c0-1.1-0.9-2-2-2h-5V3z"
-                        animatedProps={animatedProps}
-                    />
-                </Svg>
-            </Animated.View>
-        </PressableWithoutFeedback>
+            <PressableWithoutFeedback
+                ref={(el) => {
+                    fabPressable.current = el ?? null;
+                    if (buttonRef && 'current' in buttonRef) {
+                        buttonRef.current = el ?? null;
+                    }
+                }}
+                style={[styles.h100, styles.bottomTabBarItem]}
+                accessibilityLabel={accessibilityLabel}
+                onPress={toggleFabAction}
+                onLongPress={() => {}}
+                role={role}
+                shouldUseHapticsOnLongPress={false}
+            >
+                <Animated.View style={[styles.floatingActionButton, animatedStyle]}>
+                    <Svg
+                        width={variables.iconSizeNormal}
+                        height={variables.iconSizeNormal}
+                    >
+                        <AnimatedPath
+                            d="M12,3c0-1.1-0.9-2-2-2C8.9,1,8,1.9,8,3v5H3c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2h5v5c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2v-5h5c1.1,0,2-0.9,2-2c0-1.1-0.9-2-2-2h-5V3z"
+                            animatedProps={animatedProps}
+                        />
+                    </Svg>
+                </Animated.View>
+            </PressableWithoutFeedback>
+        </EducationalTooltip>
     );
 }
 

@@ -332,6 +332,7 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     }
 
     const onPress = () => {
+        setMigratedUserFilterTooltipViewed();
         const filterFormValues = SearchQueryUtils.buildFilterFormValuesFromQuery(queryJSON, policyCategories, policyTagsLists, currencyList, personalDetails, cardList, reports, taxRates);
         SearchActions.updateAdvancedFilters(filterFormValues);
 
@@ -384,15 +385,12 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
                             vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
                             horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
                         }}
-                        renderTooltipContent={() => renderProductTourElement(CONST.MIGRATED_USER_PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP)}
+                        renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP)}
                         wrapperStyle={styles.quickActionTooltipWrapper}
-                        onHideTooltip={setMigratedUserFilterTooltipViewed}
-                        shouldUseOverlay
-                        shouldTargetBePressable
+                        // onHideTooltip={setMigratedUserFilterTooltipViewed}
                     >
                         <Button
                             innerStyles={!isCannedQuery && [styles.searchRouterInputResults, styles.borderNone]}
-                            style={{zIndex: 100900}}
                             text={translate('search.filtersHeader')}
                             icon={Expensicons.Filters}
                             onPress={onPress}

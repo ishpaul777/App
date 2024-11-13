@@ -5777,21 +5777,37 @@ const translations = {
         takeATwoMinuteTour: 'Haz un tour de 2 minutos',
         exploreExpensify: 'Explora todo lo que Expensify tiene para ofrecer',
     },
-    nudgemigrationProductTour: {
+    productTraining: {
         welcomeModal: '💡 Welcome to the new workspace! 🎉',
         filterButton: {
             bold: 'Customize your search',
             regular: 'here!',
         },
         bottomNavInbox: {
-            bold: 'Your to-do list',
+            bold: 'Your to-do list ',
             regular: {
-                part1: 'comes with 🟢 for',
-                part2: 'actions to take and 🔴 for errors',
+                part1: 'comes with 🟢 for ',
+                part2: 'actions to take and 🔴 for errors.',
             },
         },
-        workspaceChat: 'Review submitted expenses and chat with approvers in your workspace chat',
-        globalCreate: 'Where to create expenses, start chatting, and more',
+        workspaceChat: {
+            regular: {
+                part1: 'Review submitted expenses and chat ',
+                part2: 'with approvers in your ',
+            },
+            bold: 'workspace chat.',
+        },
+        globalCreate: {
+            bold: 'Create expenses ',
+            regular: {
+                part1: 'start ',
+                part2: 'chats and more.',
+            },
+        },
+        conciergeGBRTooltip: {
+            regular: 'Get started ',
+            bold: 'here!',
+        },
     },
 };
 

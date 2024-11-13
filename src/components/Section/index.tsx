@@ -93,7 +93,6 @@ type SectionProps = Partial<ChildrenProps> & {
 
     /** Banner to display at the top of the section */
     banner?: ReactNode;
-
 };
 
 function Section({

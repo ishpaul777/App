@@ -3,6 +3,11 @@
  */
 type DismissedProductTraining = {
     /**
+     * When user dismisses the GBR tooltip on Concierege chat screen, we store the timestamp here.
+     */
+    conciergeGBRTooltip: Date;
+
+    /**
      * When user dismisses the nudgeMigration Welcome Modal, we store the timestamp here.
      */
     nudgeMigrationWelcomeModal: Date;

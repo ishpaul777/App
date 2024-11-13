@@ -30,9 +30,6 @@ type BaseGenericTooltipProps = {
 
     /** Handles what to do when hiding the tooltip */
     onHideTooltip?: () => void;
-
-    /** Whether the target should be pressable */
-    shouldTargetBePressable?: boolean;
 } & Pick<
     SharedTooltipProps,
     'renderTooltipContent' | 'maxWidth' | 'numberOfLines' | 'text' | 'shouldForceRenderingBelow' | 'wrapperStyle' | 'anchorAlignment' | 'shouldUseOverlay' | 'onHideTooltip'

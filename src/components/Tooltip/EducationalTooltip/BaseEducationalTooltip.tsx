@@ -64,6 +64,20 @@ function BaseEducationalTooltip({children, onHideTooltip, shouldRender = false, 
         [],
     );
 
+    useEffect(() => {
+        // if tooltip is never shown return
+        if (!didShow.current) {
+            return;
+        }
+        // if shouldShow is true then we should reshow the tooltip¸
+        if (shouldShow) {
+            show.current?.();
+        } else {
+            // if shouldShow is true then we should reshow the tooltip¸
+            hideTooltipRef.current?.();
+        }
+    }, [closeTooltip, shouldShow]);
+
     // Automatically hide tooltip after 5 seconds
     useEffect(() => {
         if (!shouldAutoDismiss) {
