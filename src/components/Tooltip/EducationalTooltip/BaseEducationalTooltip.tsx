@@ -13,7 +13,7 @@ type LayoutChangeEventWithTarget = NativeSyntheticEvent<{layout: LayoutRectangle
  * A component used to wrap an element intended for displaying a tooltip.
  * This tooltip would show immediately without user's interaction and hide after 5 seconds.
  */
-function BaseEducationalTooltip({children, onHideTooltip, shouldRender = false, shouldAutoDismiss = false, ...props}: EducationalTooltipProps) {
+function BaseEducationalTooltip({children, onHideTooltip, shouldRender = false, shouldAutoDismiss = false, isScreenFocused = true, ...props}: EducationalTooltipProps) {
     const hideTooltipRef = useRef<() => void>();
 
     const [shouldMeasure, setShouldMeasure] = useState(false);
@@ -65,18 +65,11 @@ function BaseEducationalTooltip({children, onHideTooltip, shouldRender = false, 
     );
 
     useEffect(() => {
-        // if tooltip is never shown return
-        if (!didShow.current) {
+        if (!didShow.current && isScreenFocused && shouldShow) {
             return;
         }
-        // if shouldShow is true then we should reshow the tooltip¸
-        if (shouldShow) {
-            show.current?.();
-        } else {
-            // if shouldShow is true then we should reshow the tooltip¸
-            hideTooltipRef.current?.();
-        }
-    }, [closeTooltip, shouldShow]);
+        hideTooltipRef.current?.();
+    }, [shouldShow, isScreenFocused]);
 
     // Automatically hide tooltip after 5 seconds
     useEffect(() => {
@@ -100,7 +93,7 @@ function BaseEducationalTooltip({children, onHideTooltip, shouldRender = false, 
     }, [shouldAutoDismiss, shouldShow, closeTooltip]);
 
     useEffect(() => {
-        if (!shouldMeasure || !shouldShow || didShow.current) {
+        if (!shouldMeasure || !shouldShow) {
             return;
         }
         // When tooltip is used inside an animated view (e.g. popover), we need to wait for the animation to finish before measuring content.

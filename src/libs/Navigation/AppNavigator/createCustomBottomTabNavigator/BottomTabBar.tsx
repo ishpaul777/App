@@ -1,3 +1,4 @@
+import {useIsFocused as useIsFocusedOriginal, useNavigationState} from '@react-navigation/native';
 import React, {memo, useCallback, useEffect, useState} from 'react';
 import {View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
@@ -11,12 +12,15 @@ import useActiveWorkspace from '@hooks/useActiveWorkspace';
 import useCurrentReportID from '@hooks/useCurrentReportID';
 import useLocalize from '@hooks/useLocalize';
 import useProductTour from '@hooks/useProductTour';
+import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
-import {setMigratedUserInboxTooltipViewed} from '@libs/actions/Welcome';
 import interceptAnonymousUser from '@libs/interceptAnonymousUser';
+import CENTRAL_PANE_SCREENS from '@libs/Navigation/AppNavigator/CENTRAL_PANE_SCREENS';
+import getTopmostCentralPaneRoute from '@libs/Navigation/getTopmostCentralPaneRoute';
+import getTopmostFullScreenRoute from '@libs/Navigation/getTopmostFullScreenRoute';
 import Navigation from '@libs/Navigation/Navigation';
-import type {AuthScreensParamList, RootStackParamList, State} from '@libs/Navigation/types';
+import type {AuthScreensParamList, CentralPaneName, FullScreenName, NavigationPartialRoute, RootStackParamList, State} from '@libs/Navigation/types';
 import * as PolicyUtils from '@libs/PolicyUtils';
 import * as SearchQueryUtils from '@libs/SearchQueryUtils';
 import type {BrickRoad} from '@libs/WorkspacesSettingsUtils';
@@ -64,6 +68,19 @@ function handleQueryWithPolicyID(query: SearchQueryString, activePolicyID?: stri
     return SearchQueryUtils.buildSearchQueryString(queryJSON);
 }
 
+const useIsFocused = () => {
+    const {shouldUseNarrowLayout} = useResponsiveLayout();
+    const isFocused = useIsFocusedOriginal();
+    const topmostFullScreenName = useNavigationState<RootStackParamList, NavigationPartialRoute<FullScreenName> | undefined>(getTopmostFullScreenRoute);
+    const topmostCentralPane = useNavigationState<RootStackParamList, NavigationPartialRoute<CentralPaneName> | undefined>(getTopmostCentralPaneRoute);
+    if (topmostFullScreenName) {
+        return false;
+    }
+    if (shouldUseNarrowLayout) {
+        return isFocused || topmostCentralPane?.name === SCREENS.SEARCH.CENTRAL_PANE;
+    }
+    return isFocused || Object.keys(CENTRAL_PANE_SCREENS).includes(topmostCentralPane?.name ?? '');
+};
 function BottomTabBar({selectedTab}: BottomTabBarProps) {
     const theme = useTheme();
     const styles = useThemeStyles();
@@ -80,9 +97,8 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
     const [chatTabBrickRoad, setChatTabBrickRoad] = useState<BrickRoad>(
         getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations),
     );
-
-    const {renderProductTourElement, shouldShowBottomNavInboxTooltip} = useProductTour();
-
+    const isFocused = useIsFocused();
+    const {renderProductTourElement, shouldShowBottomNavInboxTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP);
     useEffect(() => {
         setChatTabBrickRoad(getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations));
         // We need to get a new brick road state when report actions are updated, otherwise we'll be showing an outdated brick road.
@@ -91,14 +107,14 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
 
     const navigateToChats = useCallback(() => {
         if (shouldShowBottomNavInboxTooltip) {
-            setMigratedUserInboxTooltipViewed();
+            hideElement();
         }
         if (selectedTab === SCREENS.HOME) {
             return;
         }
         const route = activeWorkspaceID ? (`/w/${activeWorkspaceID}/${ROUTES.HOME}` as Route) : ROUTES.HOME;
         Navigation.navigate(route);
-    }, [activeWorkspaceID, shouldShowBottomNavInboxTooltip, selectedTab]);
+    }, [shouldShowBottomNavInboxTooltip, selectedTab, activeWorkspaceID, hideElement]);
 
     const navigateToSearch = useCallback(() => {
         if (selectedTab === SCREENS.SEARCH.BOTTOM_TAB) {
@@ -145,15 +161,14 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
             )}
             <View style={styles.bottomTabBarContainer}>
                 <EducationalTooltip
+                    isScreenFocused={isFocused}
                     shouldRender={shouldShowBottomNavInboxTooltip}
                     anchorAlignment={{
                         horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER,
                         vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
                     }}
-                    renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP)}
+                    renderTooltipContent={renderProductTourElement}
                     wrapperStyle={styles.quickActionTooltipWrapper}
-                    onHideTooltip={setMigratedUserInboxTooltipViewed}
-                    // shouldAutoDismiss
                 >
                     <PressableWithFeedback
                         onPress={navigateToChats}

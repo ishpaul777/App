@@ -103,7 +103,7 @@ function Search({queryJSON, onSearchListScroll, isSearchScreenFocused, contentCo
         useSearchContext();
     const {selectionMode} = useMobileSelectionMode(false);
     const [offset, setOffset] = useState(0);
-    const {shouldShowMigratedUserOnboardingModal} = useProductTour();
+    const {shouldShowMigratedUserOnboardingModal, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.NUDGE_MIGRATION_WELCOME_MODAL);
 
     const {type, status, sortBy, sortOrder, hash} = queryJSON;
 
@@ -312,7 +312,7 @@ function Search({queryJSON, onSearchListScroll, isSearchScreenFocused, contentCo
         return (
             <>
                 <MigratedUserOnboardingModal
-                    onClose={WelcomeActions.setNudgeMigratedUserWelcomeModalViewed}
+                    onClose={hideElement}
                     isVisible={shouldShowMigratedUserOnboardingModal}
                 />
                 <View style={[shouldUseNarrowLayout ? styles.searchListContentContainerStyles : styles.mt3, styles.flex1]}>

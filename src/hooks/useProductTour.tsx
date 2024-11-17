@@ -1,5 +1,4 @@
-import {useFocusEffect} from '@react-navigation/native';
-import React, {createContext, useCallback, useContext, useMemo, useState} from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import {View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import type {ValueOf} from 'type-fest';
@@ -7,10 +6,12 @@ import Icon from '@components/Icon';
 import * as Expensicons from '@components/Icon/Expensicons';
 import Text from '@components/Text';
 import {
-    setMigratedUserFilterTooltipViewed,
-    setMigratedUserGlobalCreateTooltipViewed,
-    setMigratedUserInboxTooltipViewed,
-    setMigratedUserWorkspaceChatTooltipViewed,
+    setConciergeChatTooltipViewed,
+    setFilterTooltipViewed,
+    setGlobalCreateTooltipViewed,
+    setInboxTooltipViewed,
+    setNudgeMigratedUserWelcomeModalViewed,
+    setWorkspaceChatTooltipViewed,
 } from '@libs/actions/Welcome';
 import {hasCompletedGuidedSetupFlowSelector} from '@libs/onboardingSelectors';
 import CONST from '@src/CONST';
@@ -22,30 +23,33 @@ import useResponsiveLayout from './useResponsiveLayout';
 import useTheme from './useTheme';
 import useThemeStyles from './useThemeStyles';
 
+type ProductTourElementName = ValueOf<typeof CONST.PRODUCT_TRAINING_ELEMENTS>;
+
 type ProductTourContextType = {
-    shouldShowMigratedUserOnboardingModal: boolean;
-    renderProductTourElement: (elementName: ValueOf<typeof CONST.PRODUCT_TRAINING_ELEMENTS>) => React.ReactNode | null;
-    shouldShowFilterButtonTooltip: boolean;
-    shouldShowBottomNavInboxTooltip: boolean;
-    shouldShowWorkspaceChatLhnTooltip: boolean;
-    shouldShowGlobalCreateTooltip: boolean;
-    shouldShowConciergeGBRTooltip: boolean;
+    shouldRenderElement: (elementName: ProductTourElementName) => boolean;
+    renderProductTourElement: (elementName: ProductTourElementName) => React.ReactNode | null;
+    registerTooltip: (elementName: ProductTourElementName) => void;
+    unregisterTooltip: (elementName: ProductTourElementName) => void;
 };
 
 const ProductTourContext = createContext<ProductTourContextType>({
-    shouldShowMigratedUserOnboardingModal: false,
+    shouldRenderElement: () => false,
     renderProductTourElement: () => null,
-    shouldShowFilterButtonTooltip: false,
-    shouldShowBottomNavInboxTooltip: false,
-    shouldShowWorkspaceChatLhnTooltip: false,
-    shouldShowGlobalCreateTooltip: false,
-    shouldShowConciergeGBRTooltip: false,
+    registerTooltip: () => {},
+    unregisterTooltip: () => {},
 });
 
 const {NUDGE_MIGRATION_WELCOME_MODAL, FILTER_BUTTON_TOOLTIP, BOTTOM_NAV_INBOX_TOOLTIP, WORKSPACE_CHAT_LHN_TOOLTIP, GLOBAL_CREATE_TOOLTIP, CONCIERGE_GBR_TOOLTIP} =
     CONST.PRODUCT_TRAINING_ELEMENTS;
 
 const PRODUCT_TOUR_FLOWS = {
+    [NUDGE_MIGRATION_WELCOME_MODAL]: {
+        text: [{translationKey: 'productTraining.welcomeModal', isBold: false}],
+        onHideElement: setNudgeMigratedUserWelcomeModalViewed,
+        name: NUDGE_MIGRATION_WELCOME_MODAL,
+        priority: 1400,
+        conflictingElements: [BOTTOM_NAV_INBOX_TOOLTIP, GLOBAL_CREATE_TOOLTIP, WORKSPACE_CHAT_LHN_TOOLTIP, FILTER_BUTTON_TOOLTIP],
+    },
     [CONCIERGE_GBR_TOOLTIP]: {
         text: [
             [
@@ -53,26 +57,22 @@ const PRODUCT_TOUR_FLOWS = {
                 {translationKey: 'productTraining.conciergeGBRTooltip.bold', isBold: true},
             ],
         ],
-        onHideElement: () => {},
+        onHideElement: setConciergeChatTooltipViewed,
         name: CONCIERGE_GBR_TOOLTIP,
         shouldShowForNewUserOnly: true,
         shouldShowOnNarrowLayoutOnly: true,
         priority: 1300,
-    },
-    [NUDGE_MIGRATION_WELCOME_MODAL]: {
-        text: [{translationKey: 'productTraining.welcomeModal', isBold: false}],
-        onHideElement: () => {},
-        name: NUDGE_MIGRATION_WELCOME_MODAL,
-        priority: 1000,
+        conflictingElements: [BOTTOM_NAV_INBOX_TOOLTIP, GLOBAL_CREATE_TOOLTIP, WORKSPACE_CHAT_LHN_TOOLTIP],
     },
     [FILTER_BUTTON_TOOLTIP]: {
         text: [
             {translationKey: 'productTraining.filterButton.bold', isBold: true},
             {translationKey: 'productTraining.filterButton.regular', isBold: false},
         ],
-        onHideElement: setMigratedUserFilterTooltipViewed,
+        onHideElement: setFilterTooltipViewed,
         name: FILTER_BUTTON_TOOLTIP,
         priority: 900,
+        conflictingElements: [BOTTOM_NAV_INBOX_TOOLTIP, GLOBAL_CREATE_TOOLTIP],
     },
     [BOTTOM_NAV_INBOX_TOOLTIP]: {
         text: [
@@ -82,9 +82,10 @@ const PRODUCT_TOUR_FLOWS = {
             ],
             {translationKey: 'productTraining.bottomNavInbox.regular.part2', isBold: false},
         ],
-        onHideElement: setMigratedUserInboxTooltipViewed,
+        onHideElement: setInboxTooltipViewed,
         name: BOTTOM_NAV_INBOX_TOOLTIP,
         priority: 800,
+        conflictingElements: [CONCIERGE_GBR_TOOLTIP, GLOBAL_CREATE_TOOLTIP, WORKSPACE_CHAT_LHN_TOOLTIP, FILTER_BUTTON_TOOLTIP, NUDGE_MIGRATION_WELCOME_MODAL],
     },
     [GLOBAL_CREATE_TOOLTIP]: {
         text: [
@@ -94,9 +95,10 @@ const PRODUCT_TOUR_FLOWS = {
             ],
             {translationKey: 'productTraining.globalCreate.regular.part2', isBold: false},
         ],
-        onHideElement: setMigratedUserGlobalCreateTooltipViewed,
+        onHideElement: setGlobalCreateTooltipViewed,
         name: GLOBAL_CREATE_TOOLTIP,
-        priority: 600,
+        priority: 1200,
+        conflictingElements: [BOTTOM_NAV_INBOX_TOOLTIP, WORKSPACE_CHAT_LHN_TOOLTIP, CONCIERGE_GBR_TOOLTIP, FILTER_BUTTON_TOOLTIP, NUDGE_MIGRATION_WELCOME_MODAL],
     },
     [WORKSPACE_CHAT_LHN_TOOLTIP]: {
         text: [
@@ -106,11 +108,13 @@ const PRODUCT_TOUR_FLOWS = {
                 {translationKey: 'productTraining.workspaceChat.bold', isBold: true},
             ],
         ],
-        onHideElement: setMigratedUserWorkspaceChatTooltipViewed,
+        onHideElement: setWorkspaceChatTooltipViewed,
         name: WORKSPACE_CHAT_LHN_TOOLTIP,
-        priority: 700,
+        conflictingElements: [BOTTOM_NAV_INBOX_TOOLTIP, GLOBAL_CREATE_TOOLTIP, CONCIERGE_GBR_TOOLTIP],
+        priority: 600,
     },
 };
+
 const tooltipNames = {
     shouldShowConciergeGBRTooltip: CONCIERGE_GBR_TOOLTIP,
     shouldShowMigratedUserOnboardingModal: NUDGE_MIGRATION_WELCOME_MODAL,
@@ -129,67 +133,124 @@ function ProductTourProvider({children}: ChildrenProps) {
     });
     const [dismissedProductTraining] = useOnyx(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING);
     const {translate} = useLocalize();
-    const [isScreenFocused, setIsScreenFocused] = useState(false);
-    useFocusEffect(
-        useCallback(() => {
-            setIsScreenFocused(true);
-            return () => {
-                setIsScreenFocused(false);
-            };
-        }, []),
-    );
     const {shouldUseNarrowLayout} = useResponsiveLayout();
-
     const styles = useThemeStyles();
     const theme = useTheme();
 
-    const shouldRenderElement = useCallback(
-        (elementName: ValueOf<typeof CONST.PRODUCT_TRAINING_ELEMENTS>) => {
-            return !dismissedProductTraining?.[elementName] && isScreenFocused;
+    // Track active tooltips
+    const [activeTooltips, setActiveTooltips] = useState<Set<ProductTourElementName>>(new Set());
+
+    const unregisterTooltip = useCallback((elementName: ProductTourElementName) => {
+        setActiveTooltips((prev) => {
+            const next = new Set(prev);
+            next.delete(elementName);
+            return next;
+        });
+    }, []);
+
+    const determineVisibleTooltip = useCallback((): {
+        visibleTooltip: ProductTourElementName | null;
+        conflictingElements: ProductTourElementName[];
+    } => {
+        if (activeTooltips.size === 0) {
+            return {visibleTooltip: null, conflictingElements: []};
+        }
+
+        const sortedTooltips = Array.from(activeTooltips)
+            .map((name) => ({
+                name,
+                priority: PRODUCT_TOUR_FLOWS[name]?.priority ?? 0,
+            }))
+            .sort((a, b) => b.priority - a.priority);
+
+        const highestPriorityTooltip = sortedTooltips.at(0);
+
+        if (!highestPriorityTooltip) {
+            return {visibleTooltip: null, conflictingElements: []};
+        }
+
+        const tooltipConfig = PRODUCT_TOUR_FLOWS[highestPriorityTooltip.name];
+
+        return {
+            visibleTooltip: highestPriorityTooltip.name,
+            conflictingElements: tooltipConfig?.conflictingElements ?? [],
+        };
+    }, [activeTooltips]);
+
+    const checkBaseConditions = useCallback(
+        (elementName: ProductTourElementName) => {
+            // Early returns for base validation
+            const isDismissed = dismissedProductTraining?.[elementName];
+            const isEligibleForOnboarding = isFirstTimeNewExpensifyUser && isOnboardingCompleted;
+
+            // Check if user is eligible for any tooltips
+            if (!isEligibleForOnboarding && !hasBeenAddedToNudgeMigration) {
+                return false;
+            }
+
+            // Special case for migration modal
+            if (elementName === NUDGE_MIGRATION_WELCOME_MODAL) {
+                return !!(hasBeenAddedToNudgeMigration && !isDismissed);
+            }
+
+            const tooltipConfig = PRODUCT_TOUR_FLOWS[elementName];
+            const isNewUserTooltip = 'shouldShowForNewUserOnly' in tooltipConfig && tooltipConfig.shouldShowForNewUserOnly;
+
+            // If not a new user tooltip, just check if it's dismissed
+            if (!isNewUserTooltip) {
+                return !isDismissed;
+            }
+
+            // For new user tooltips, check additional conditions
+            const baseConditions = isEligibleForOnboarding && !isDismissed && !hasBeenAddedToNudgeMigration;
+
+            // Check narrow layout condition if applicable
+            return tooltipConfig.shouldShowOnNarrowLayoutOnly ? baseConditions && shouldUseNarrowLayout : baseConditions;
         },
-        [dismissedProductTraining, isScreenFocused],
+        [dismissedProductTraining, hasBeenAddedToNudgeMigration, isFirstTimeNewExpensifyUser, isOnboardingCompleted, shouldUseNarrowLayout],
     );
 
-    const getNextElementForProductTourElement = useCallback(() => {
-        if (!isFirstTimeNewExpensifyUser && !hasBeenAddedToNudgeMigration) {
-            return undefined;
-        }
-        const availableTooltips = Object.values(PRODUCT_TOUR_FLOWS)
-            .filter((item) => {
-                if (item.name === NUDGE_MIGRATION_WELCOME_MODAL) {
-                    return hasBeenAddedToNudgeMigration;
-                }
-                // if item is for new user only don't show if user is not new or onboarding is completed
-                if ('shouldShowForNewUserOnly' in item && item.shouldShowForNewUserOnly) {
-                    if ('shouldShowOnNarrowLayoutOnly' in item && item.shouldShowOnNarrowLayoutOnly) {
-                        return shouldUseNarrowLayout;
-                    }
-                    return isFirstTimeNewExpensifyUser && isOnboardingCompleted;
-                }
-                // if item should only show on narrow layout don't show if not on narrow layout
+    const registerTooltip = useCallback(
+        (elementName: ProductTourElementName) => {
+            const shouldRegister = checkBaseConditions(elementName);
+            if (!shouldRegister) {
+                return;
+            }
+            setActiveTooltips((prev) => new Set([...prev, elementName]));
+        },
+        [checkBaseConditions],
+    );
+
+    const shouldRenderElement = useCallback(
+        (elementName: ProductTourElementName) => {
+            // First check base conditions
+            const baseCondition = checkBaseConditions(elementName);
+            if (!baseCondition) {
+                return false;
+            }
+
+            // Then check conflicts
+            const {visibleTooltip, conflictingElements} = determineVisibleTooltip();
+
+            // If this is the highest priority visible tooltip, show it
+            if (elementName === visibleTooltip) {
                 return true;
-            })
-            .sort((a, b) => b.priority - a.priority);
-        return availableTooltips.find((flow) => shouldRenderElement(flow.name));
-    }, [shouldRenderElement, hasBeenAddedToNudgeMigration, isFirstTimeNewExpensifyUser, isOnboardingCompleted, shouldUseNarrowLayout]);
+            }
 
-    // Using useMemo to derive each tooltip display boolean based on the next element
-    const tooltipStates = useMemo(() => {
-        const nextElement = getNextElementForProductTourElement();
-        return Object.fromEntries(Object.entries(tooltipNames).map(([key, tooltipName]) => [key, nextElement?.name === tooltipName]));
-    }, [getNextElementForProductTourElement]);
+            // If this conflicts with the visible tooltip,
+            // check if any of the conflicting elements are visible
+            if (conflictingElements.includes(elementName)) {
+                return false;
+            }
 
-    const {
-        shouldShowConciergeGBRTooltip,
-        shouldShowMigratedUserOnboardingModal,
-        shouldShowFilterButtonTooltip,
-        shouldShowBottomNavInboxTooltip,
-        shouldShowWorkspaceChatLhnTooltip,
-        shouldShowGlobalCreateTooltip,
-    } = tooltipStates;
+            return true;
+        },
+        [checkBaseConditions, determineVisibleTooltip],
+    );
 
+    // Your existing renderProductTourElement implementation...
     const renderProductTourElement = useCallback(
-        (elementName: ValueOf<typeof CONST.PRODUCT_TRAINING_ELEMENTS>) => {
+        (elementName: ProductTourElementName) => {
             const element = PRODUCT_TOUR_FLOWS[elementName];
             if (!element) {
                 return null;
@@ -202,12 +263,19 @@ function ProductTourProvider({children}: ChildrenProps) {
                         medium
                     />
                     <View style={[styles.flexColumn]}>
-                        {element.text.map((part) => {
+                        {element.text.map((part, index) => {
                             if (Array.isArray(part)) {
                                 return (
-                                    <Text style={styles.quickActionTooltipSubtitle}>
+                                    <Text
+                                        style={styles.quickActionTooltipSubtitle}
+                                        // eslint-disable-next-line react/no-array-index-key
+                                        key={`${elementName}-${index}`}
+                                    >
                                         {part.map((subPart) => (
-                                            <Text style={subPart.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}>
+                                            <Text
+                                                style={subPart.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}
+                                                key={subPart.translationKey}
+                                            >
                                                 {translate(subPart.translationKey as TranslationPaths)}
                                             </Text>
                                         ))}
@@ -215,7 +283,10 @@ function ProductTourProvider({children}: ChildrenProps) {
                                 );
                             }
                             return (
-                                <Text style={part.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}>
+                                <Text
+                                    style={part.isBold ? [styles.quickActionTooltipSubtitle, styles.textBold] : styles.quickActionTooltipSubtitle}
+                                    key={part.translationKey}
+                                >
                                     {translate(part.translationKey as TranslationPaths)}
                                 </Text>
                             );
@@ -242,37 +313,52 @@ function ProductTourProvider({children}: ChildrenProps) {
 
     const contextValue = useMemo(
         () => ({
-            shouldShowMigratedUserOnboardingModal,
             renderProductTourElement,
-            shouldShowFilterButtonTooltip,
-            shouldShowBottomNavInboxTooltip,
-            shouldShowWorkspaceChatLhnTooltip,
-            shouldShowGlobalCreateTooltip,
-            shouldShowConciergeGBRTooltip,
+            shouldRenderElement,
+            registerTooltip,
+            unregisterTooltip,
         }),
-        [
-            shouldShowMigratedUserOnboardingModal,
-            renderProductTourElement,
-            shouldShowFilterButtonTooltip,
-            shouldShowBottomNavInboxTooltip,
-            shouldShowWorkspaceChatLhnTooltip,
-            shouldShowGlobalCreateTooltip,
-            shouldShowConciergeGBRTooltip,
-        ],
+        [renderProductTourElement, shouldRenderElement, registerTooltip, unregisterTooltip],
     );
 
     return <ProductTourContext.Provider value={contextValue}>{children}</ProductTourContext.Provider>;
 }
 
-// Hook to use the ProductTour context
-const useProductTourContext = () => {
+const useProductTourContext = (elementName: ProductTourElementName) => {
     const context = useContext(ProductTourContext);
     if (!context) {
         throw new Error('useProductTourContext must be used within a ProductTourProvider');
     }
-    return context;
+    const {shouldRenderElement, registerTooltip, unregisterTooltip} = context;
+    // Register this tooltip when the component mounts and unregister when it unmounts
+    useEffect(() => {
+        if (elementName) {
+            registerTooltip(elementName);
+            return () => unregisterTooltip(elementName);
+        }
+        return undefined;
+        // eslint-disable-next-line react-compiler/react-compiler
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [elementName, registerTooltip, unregisterTooltip]);
+
+    const tooltipStates = useMemo<Record<keyof typeof tooltipNames, boolean>>(() => {
+        return Object.fromEntries(Object.entries(tooltipNames).map(([key, value]) => [key, shouldRenderElement(value)])) as Record<keyof typeof tooltipNames, boolean>;
+    }, [shouldRenderElement]);
+
+    const hideElement = useCallback(() => {
+        const element = PRODUCT_TOUR_FLOWS[elementName];
+        if (element?.onHideElement) {
+            element.onHideElement();
+        }
+        unregisterTooltip(elementName);
+    }, [elementName, unregisterTooltip]);
+
+    return {
+        renderProductTourElement: () => context.renderProductTourElement(elementName),
+        hideElement,
+        ...tooltipStates,
+    };
 };
 
 export {ProductTourProvider};
-
 export default useProductTourContext;

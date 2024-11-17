@@ -20,7 +20,6 @@ import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
-import {setMigratedUserWorkspaceChatTooltipViewed} from '@libs/actions/Welcome';
 import DateUtils from '@libs/DateUtils';
 import DomUtils from '@libs/DomUtils';
 // import {hasCompletedGuidedSetupFlowSelector} from '@libs/onboardingSelectors';
@@ -33,7 +32,6 @@ import * as ReportActionContextMenu from '@pages/home/report/ContextMenu/ReportA
 import FreeTrial from '@pages/settings/Subscription/FreeTrial';
 import variables from '@styles/variables';
 import Timing from '@userActions/Timing';
-import * as User from '@userActions/User';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
@@ -54,8 +52,16 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     // const [isOnboardingCompleted = true] = useOnyx(ONYXKEYS.NVP_ONBOARDING, {
     //     selector: hasCompletedGuidedSetupFlowSelector,
     // });
-    // const [shouldHideGBRTooltip] = useOnyx(ONYXKEYS.NVP_SHOULD_HIDE_GBR_TOOLTIP, {initialValue: true});
-    const {shouldShowConciergeGBRTooltip, shouldShowWorkspaceChatLhnTooltip, renderProductTourElement} = useProductTourContext();
+    const isConciergeChatReport = ReportUtils.isConciergeChatReport(report) && shouldUseNarrowLayout;
+    const isActiveWorkspaceChat = report?.isOwnPolicyExpenseChat && activePolicyID === report?.policyID;
+    // eslint-disable-next-line no-nested-ternary
+    const tooltipToRender = isConciergeChatReport
+        ? CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP
+        : isActiveWorkspaceChat
+        ? CONST.PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP
+        : undefined;
+    const {shouldShowConciergeGBRTooltip, shouldShowWorkspaceChatLhnTooltip, renderProductTourElement, hideElement} = useProductTourContext(tooltipToRender);
+    console.log('tooltipToRender', tooltipToRender, shouldShowConciergeGBRTooltip, shouldShowWorkspaceChatLhnTooltip);
 
     const {translate} = useLocalize();
     const [isContextMenuActive, setIsContextMenuActive] = useState(false);
@@ -68,30 +74,6 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
             };
         }, []),
     );
-
-    // const renderGBRTooltip = useCallback(
-    //     () => (
-    //         <View style={[styles.alignItemsCenter, styles.flexRow, styles.justifyContentCenter, styles.flexWrap, styles.textAlignCenter, styles.gap1]}>
-    //             <Icon
-    //                 src={Expensicons.Lightbulb}
-    //                 fill={theme.tooltipHighlightText}
-    //                 medium
-    //             />
-    //             <Text style={styles.quickActionTooltipSubtitle}>{translate('sidebarScreen.tooltip')}</Text>
-    //         </View>
-    //     ),
-    //     [
-    //         styles.alignItemsCenter,
-    //         styles.flexRow,
-    //         styles.justifyContentCenter,
-    //         styles.flexWrap,
-    //         styles.textAlignCenter,
-    //         styles.gap1,
-    //         styles.quickActionTooltipSubtitle,
-    //         theme.tooltipHighlightText,
-    //         translate,
-    //     ],
-    // );
 
     const isInFocusMode = viewMode === CONST.OPTION_MODE.COMPACT;
     const sidebarInnerRowStyle = StyleSheet.flatten<ViewStyle>(
@@ -169,18 +151,9 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     const subscriptAvatarBorderColor = isFocused ? focusedBackgroundColor : theme.sidebar;
     const firstIcon = optionItem.icons?.at(0);
 
-    const shouldShowConciergeChatTooltip = shouldShowConciergeGBRTooltip && isScreenFocused && shouldUseNarrowLayout && ReportUtils.isConciergeChatReport(report);
+    const shouldShowConciergeChatTooltip = shouldShowConciergeGBRTooltip && isScreenFocused && ReportUtils.isConciergeChatReport(report);
 
     const shouldShowActiveWorkspaceChatTooltip = shouldShowWorkspaceChatLhnTooltip && report?.isOwnPolicyExpenseChat && activePolicyID === report?.policyID;
-
-    const renderTooltip = () => {
-        if (shouldShowConciergeChatTooltip) {
-            return renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP);
-        }
-        if (shouldShowWorkspaceChatLhnTooltip) {
-            return renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP);
-        }
-    };
 
     return (
         <OfflineWithFeedback
@@ -190,8 +163,9 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
             needsOffscreenAlphaCompositing
         >
             <EducationalTooltip
+                isScreenFocused={isScreenFocused}
                 shouldRender={shouldShowConciergeChatTooltip || shouldShowActiveWorkspaceChatTooltip}
-                renderTooltipContent={renderTooltip}
+                renderTooltipContent={renderProductTourElement}
                 anchorAlignment={{
                     horizontal: shouldShowActiveWorkspaceChatTooltip ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
                     vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
@@ -211,10 +185,9 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
                                     Timing.start(CONST.TIMING.OPEN_REPORT);
 
                                     event?.preventDefault();
-                                    if (shouldShowWorkspaceChatLhnTooltip) {
-                                        setMigratedUserWorkspaceChatTooltipViewed();
-                                    } else if (shouldShowConciergeChatTooltip) {
-                                        User.dismissGBRTooltip();
+                                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                                    if (shouldShowActiveWorkspaceChatTooltip || shouldShowConciergeChatTooltip) {
+                                        hideElement();
                                     }
                                     // Enable Composer to focus on clicking the same chat after opening the context menu.
                                     ReportActionComposeFocusManager.focus();

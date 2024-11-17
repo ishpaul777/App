@@ -78,6 +78,9 @@ type EducationalTooltipProps = ChildrenProps &
 
         /** Whether the actual Tooltip should be rendered. If false, it's just going to return the children */
         shouldRender?: boolean;
+
+        /** Whether the screen is focused */
+        isScreenFocused?: boolean;
     };
 
 type TooltipExtendedProps = (EducationalTooltipProps | TooltipProps) & {

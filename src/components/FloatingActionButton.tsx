@@ -1,3 +1,4 @@
+import {useIsFocused as useIsFocusedOriginal, useNavigationState} from '@react-navigation/native';
 import type {ForwardedRef} from 'react';
 import React, {forwardRef, useEffect, useRef} from 'react';
 // eslint-disable-next-line no-restricted-imports
@@ -9,9 +10,13 @@ import useProductTour from '@hooks/useProductTour';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
-import {setMigratedUserGlobalCreateTooltipViewed} from '@libs/actions/Welcome';
+import CENTRAL_PANE_SCREENS from '@libs/Navigation/AppNavigator/CENTRAL_PANE_SCREENS';
+import getTopmostCentralPaneRoute from '@libs/Navigation/getTopmostCentralPaneRoute';
+import getTopmostFullScreenRoute from '@libs/Navigation/getTopmostFullScreenRoute';
+import type {CentralPaneName, FullScreenName, NavigationPartialRoute, RootStackParamList} from '@libs/Navigation/types';
 import variables from '@styles/variables';
 import CONST from '@src/CONST';
+import SCREENS from '@src/SCREENS';
 import {PressableWithoutFeedback} from './Pressable';
 import EducationalTooltip from './Tooltip/EducationalTooltip';
 
@@ -56,6 +61,20 @@ type FloatingActionButtonProps = {
     role: Role;
 };
 
+const useIsFocused = () => {
+    const {shouldUseNarrowLayout} = useResponsiveLayout();
+    const isFocused = useIsFocusedOriginal();
+    const topmostFullScreenName = useNavigationState<RootStackParamList, NavigationPartialRoute<FullScreenName> | undefined>(getTopmostFullScreenRoute);
+    const topmostCentralPane = useNavigationState<RootStackParamList, NavigationPartialRoute<CentralPaneName> | undefined>(getTopmostCentralPaneRoute);
+    if (topmostFullScreenName) {
+        return false;
+    }
+    if (shouldUseNarrowLayout) {
+        return isFocused || topmostCentralPane?.name === SCREENS.SEARCH.CENTRAL_PANE;
+    }
+    return isFocused || Object.keys(CENTRAL_PANE_SCREENS).includes(topmostCentralPane?.name ?? '');
+};
+
 function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: FloatingActionButtonProps, ref: ForwardedRef<HTMLDivElement | View | Text>) {
     const {success, buttonDefaultBG, textLight, textDark} = useTheme();
     const styles = useThemeStyles();
@@ -64,7 +83,8 @@ function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: Flo
     const fabPressable = useRef<HTMLDivElement | View | Text | null>(null);
     const sharedValue = useSharedValue(isActive ? 1 : 0);
     const buttonRef = ref;
-    const {renderProductTourElement, shouldShowGlobalCreateTooltip} = useProductTour();
+    const {renderProductTourElement, shouldShowGlobalCreateTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP);
+    const isFocused = useIsFocused();
 
     useEffect(() => {
         // eslint-disable-next-line react-compiler/react-compiler
@@ -98,7 +118,7 @@ function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: Flo
 
     const toggleFabAction = (event: GestureResponderEvent | KeyboardEvent | undefined) => {
         if (shouldShowGlobalCreateTooltip) {
-            setMigratedUserGlobalCreateTooltipViewed();
+            hideElement();
         }
         // Drop focus to avoid blue focus ring.
         fabPressable.current?.blur();
@@ -107,12 +127,13 @@ function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: Flo
 
     return (
         <EducationalTooltip
-            shouldRender={shouldShowGlobalCreateTooltip}
+            shouldRender={shouldShowGlobalCreateTooltip && isFocused}
+            isScreenFocused={isFocused}
             anchorAlignment={{
                 horizontal: shouldUseNarrowLayout ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
                 vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
             }}
-            renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP)}
+            renderTooltipContent={renderProductTourElement}
             wrapperStyle={styles.quickActionTooltipWrapper}
             // onHideTooltip={setMigratedUserGlobalCreateTooltipViewed}
         >

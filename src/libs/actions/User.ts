@@ -1352,12 +1352,6 @@ function dismissWorkspaceTooltip() {
     Onyx.merge(ONYXKEYS.NVP_WORKSPACE_TOOLTIP, {shouldShow: false});
 }
 
-function dismissGBRTooltip() {
-    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
-        [CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP]: new Date(),
-    });
-}
-
 function requestRefund() {
     API.write(WRITE_COMMANDS.REQUEST_REFUND, null);
 }
@@ -1412,6 +1406,5 @@ export {
     addPendingContactMethod,
     clearValidateCodeActionError,
     subscribeToActiveGuides,
-    dismissGBRTooltip,
     setIsDebugModeEnabled,
 };

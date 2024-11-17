@@ -206,27 +206,33 @@ function setNudgeMigratedUserWelcomeModalViewed() {
     });
 }
 
-function setMigratedUserFilterTooltipViewed() {
+function setFilterTooltipViewed() {
     Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
         [CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP]: new Date(),
     });
 }
 
-function setMigratedUserInboxTooltipViewed() {
+function setInboxTooltipViewed() {
     Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
         [CONST.PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP]: new Date(),
     });
 }
 
-function setMigratedUserWorkspaceChatTooltipViewed() {
+function setWorkspaceChatTooltipViewed() {
     Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
         [CONST.PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP]: new Date(),
     });
 }
 
-function setMigratedUserGlobalCreateTooltipViewed() {
+function setGlobalCreateTooltipViewed() {
     Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
         [CONST.PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP]: new Date(),
+    });
+}
+
+function setConciergeChatTooltipViewed() {
+    Onyx.merge(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING, {
+        [CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP]: new Date(),
     });
 }
 
@@ -244,8 +250,9 @@ export {
     setOnboardingCompanySize,
     setSelfTourViewed,
     setNudgeMigratedUserWelcomeModalViewed,
-    setMigratedUserFilterTooltipViewed,
-    setMigratedUserInboxTooltipViewed,
-    setMigratedUserWorkspaceChatTooltipViewed,
-    setMigratedUserGlobalCreateTooltipViewed,
+    setFilterTooltipViewed,
+    setInboxTooltipViewed,
+    setWorkspaceChatTooltipViewed,
+    setGlobalCreateTooltipViewed,
+    setConciergeChatTooltipViewed,
 };

@@ -1,3 +1,4 @@
+import {useIsFocused} from '@react-navigation/native';
 import React, {useEffect, useMemo, useState} from 'react';
 import {InteractionManager, View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
@@ -22,7 +23,6 @@ import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import * as SearchActions from '@libs/actions/Search';
-import {setMigratedUserFilterTooltipViewed} from '@libs/actions/Welcome';
 import Log from '@libs/Log';
 import Navigation from '@libs/Navigation/Navigation';
 import {getAllTaxRates} from '@libs/PolicyUtils';
@@ -127,7 +127,7 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     // eslint-disable-next-line rulesdir/prefer-shouldUseNarrowLayout-instead-of-isSmallScreenWidth
     const {shouldUseNarrowLayout, isSmallScreenWidth} = useResponsiveLayout();
     const {selectedTransactions, clearSelectedTransactions, selectedReports} = useSearchContext();
-    const {renderProductTourElement, shouldShowFilterButtonTooltip} = useProductTour();
+    const {renderProductTourElement, shouldShowFilterButtonTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP);
     const [selectionMode] = useOnyx(ONYXKEYS.MOBILE_SELECTION_MODE);
     const personalDetails = usePersonalDetails();
     const [reports] = useOnyx(ONYXKEYS.COLLECTION.REPORT);
@@ -144,6 +144,7 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     const isCannedQuery = SearchQueryUtils.isCannedSearchQuery(queryJSON);
     const headerText = isCannedQuery ? translate(getHeaderContent(type).titleText) : SearchQueryUtils.buildUserReadableQueryString(queryJSON, personalDetails, cardList, reports, taxRates);
     const [inputValue, setInputValue] = useState(headerText);
+    const isFocused = useIsFocused();
 
     useEffect(() => {
         setInputValue(headerText);
@@ -332,7 +333,9 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     }
 
     const onPress = () => {
-        setMigratedUserFilterTooltipViewed();
+        if (shouldShowFilterButtonTooltip) {
+            hideElement();
+        }
         const filterFormValues = SearchQueryUtils.buildFilterFormValuesFromQuery(queryJSON, policyCategories, policyTagsLists, currencyList, personalDetails, cardList, reports, taxRates);
         SearchActions.updateAdvancedFilters(filterFormValues);
 
@@ -379,12 +382,13 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
                     />
                 ) : (
                     <EducationalTooltip
-                        shouldRender={shouldShowFilterButtonTooltip}
+                        isScreenFocused={isFocused}
+                        shouldRender={shouldShowFilterButtonTooltip && isFocused}
                         anchorAlignment={{
                             vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
                             horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
                         }}
-                        renderTooltipContent={() => renderProductTourElement(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP)}
+                        renderTooltipContent={renderProductTourElement}
                         wrapperStyle={styles.quickActionTooltipWrapper}
                         // onHideTooltip={setMigratedUserFilterTooltipViewed}
                     >
