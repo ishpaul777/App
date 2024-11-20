@@ -103,7 +103,7 @@ function Search({queryJSON, onSearchListScroll, isSearchScreenFocused, contentCo
         useSearchContext();
     const {selectionMode} = useMobileSelectionMode(false);
     const [offset, setOffset] = useState(0);
-    const {shouldShowMigratedUserOnboardingModal, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.NUDGE_MIGRATION_WELCOME_MODAL);
+    const {shouldShowProductTrainingElement, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.NUDGE_MIGRATION_WELCOME_MODAL);
 
     const {type, status, sortBy, sortOrder, hash} = queryJSON;
 
@@ -313,7 +313,7 @@ function Search({queryJSON, onSearchListScroll, isSearchScreenFocused, contentCo
             <>
                 <MigratedUserOnboardingModal
                     onClose={hideElement}
-                    isVisible={shouldShowMigratedUserOnboardingModal}
+                    isVisible={shouldShowProductTrainingElement}
                 />
                 <View style={[shouldUseNarrowLayout ? styles.searchListContentContainerStyles : styles.mt3, styles.flex1]}>
                     <EmptySearchView type={type} />
@@ -418,7 +418,7 @@ function Search({queryJSON, onSearchListScroll, isSearchScreenFocused, contentCo
         <>
             <MigratedUserOnboardingModal
                 onClose={WelcomeActions.setNudgeMigratedUserWelcomeModalViewed}
-                isVisible={shouldShowMigratedUserOnboardingModal}
+                isVisible={shouldShowProductTrainingElement}
             />
             <SelectionListWithModal<ReportListItemType | TransactionListItemType | ReportActionListItemType>
                 ref={handleSelectionListScroll(sortedSelectedData)}

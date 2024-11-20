@@ -70,12 +70,12 @@ function SearchTypeMenuNarrow({typeMenuItems, activeItemIndex, queryJSON, title,
     const [isPopoverVisible, setIsPopoverVisible] = useState(false);
     const buttonRef = useRef<HTMLDivElement>(null);
 
-    const {renderProductTourElement, shouldShowFilterButtonTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP);
+    const {renderProductTourElement, shouldShowProductTrainingElement, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP);
 
     const openMenu = useCallback(() => setIsPopoverVisible(true), []);
     const closeMenu = useCallback(() => setIsPopoverVisible(false), []);
     const onPress = () => {
-        if (shouldShowFilterButtonTooltip) {
+        if (shouldShowProductTrainingElement) {
             hideElement();
         }
         const values = SearchQueryUtils.buildFilterFormValuesFromQuery(queryJSON, policyCategories, policyTagsLists, currencyList, personalDetails, cardList, reports, taxRates);
@@ -209,7 +209,7 @@ function SearchTypeMenuNarrow({typeMenuItems, activeItemIndex, queryJSON, title,
             </PressableWithFeedback>
             <EducationalTooltip
                 isScreenFocused={isFocused}
-                shouldRender={shouldShowFilterButtonTooltip}
+                shouldRender={shouldShowProductTrainingElement}
                 anchorAlignment={{
                     vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
                     horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER,

@@ -83,7 +83,7 @@ function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: Flo
     const fabPressable = useRef<HTMLDivElement | View | Text | null>(null);
     const sharedValue = useSharedValue(isActive ? 1 : 0);
     const buttonRef = ref;
-    const {renderProductTourElement, shouldShowGlobalCreateTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP);
+    const {renderProductTourElement, shouldShowProductTrainingElement, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.GLOBAL_CREATE_TOOLTIP);
     const isFocused = useIsFocused();
 
     useEffect(() => {
@@ -117,18 +117,16 @@ function FloatingActionButton({onPress, isActive, accessibilityLabel, role}: Flo
     );
 
     const toggleFabAction = (event: GestureResponderEvent | KeyboardEvent | undefined) => {
-        if (shouldShowGlobalCreateTooltip) {
+        if (shouldShowProductTrainingElement) {
             hideElement();
         }
         // Drop focus to avoid blue focus ring.
         fabPressable.current?.blur();
         onPress(event);
     };
-
     return (
         <EducationalTooltip
-            shouldRender={shouldShowGlobalCreateTooltip && isFocused}
-            isScreenFocused={isFocused}
+            shouldRender={shouldShowProductTrainingElement && isFocused}
             anchorAlignment={{
                 horizontal: shouldUseNarrowLayout ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
                 vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,

@@ -98,7 +98,7 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
         getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations),
     );
     const isFocused = useIsFocused();
-    const {renderProductTourElement, shouldShowBottomNavInboxTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP);
+    const {renderProductTourElement, shouldShowProductTrainingElement, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.BOTTOM_NAV_INBOX_TOOLTIP);
     useEffect(() => {
         setChatTabBrickRoad(getChatTabBrickRoad(activeWorkspaceID, currentReportID, reports, betas, policies, priorityMode, transactionViolations));
         // We need to get a new brick road state when report actions are updated, otherwise we'll be showing an outdated brick road.
@@ -106,7 +106,7 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
     }, [activeWorkspaceID, transactionViolations, reports, reportActions, betas, policies, priorityMode, currentReportID]);
 
     const navigateToChats = useCallback(() => {
-        if (shouldShowBottomNavInboxTooltip) {
+        if (shouldShowProductTrainingElement) {
             hideElement();
         }
         if (selectedTab === SCREENS.HOME) {
@@ -114,7 +114,7 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
         }
         const route = activeWorkspaceID ? (`/w/${activeWorkspaceID}/${ROUTES.HOME}` as Route) : ROUTES.HOME;
         Navigation.navigate(route);
-    }, [shouldShowBottomNavInboxTooltip, selectedTab, activeWorkspaceID, hideElement]);
+    }, [shouldShowProductTrainingElement, selectedTab, activeWorkspaceID, hideElement]);
 
     const navigateToSearch = useCallback(() => {
         if (selectedTab === SCREENS.SEARCH.BOTTOM_TAB) {
@@ -161,8 +161,7 @@ function BottomTabBar({selectedTab}: BottomTabBarProps) {
             )}
             <View style={styles.bottomTabBarContainer}>
                 <EducationalTooltip
-                    isScreenFocused={isFocused}
-                    shouldRender={shouldShowBottomNavInboxTooltip}
+                    shouldRender={shouldShowProductTrainingElement && isFocused}
                     anchorAlignment={{
                         horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER,
                         vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,

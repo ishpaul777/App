@@ -1,5 +1,4 @@
-import {useFocusEffect} from '@react-navigation/native';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import type {GestureResponderEvent, ViewStyle} from 'react-native';
 import {StyleSheet, View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
@@ -22,7 +21,7 @@ import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import DateUtils from '@libs/DateUtils';
 import DomUtils from '@libs/DomUtils';
-// import {hasCompletedGuidedSetupFlowSelector} from '@libs/onboardingSelectors';
+import {navigationRef} from '@libs/Navigation/Navigation';
 import * as OptionsListUtils from '@libs/OptionsListUtils';
 import Parser from '@libs/Parser';
 import Performance from '@libs/Performance';
@@ -34,6 +33,7 @@ import variables from '@styles/variables';
 import Timing from '@userActions/Timing';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
+import SCREENS from '@src/SCREENS';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import type {OptionRowLHNProps} from './types';
 
@@ -42,38 +42,46 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     const styles = useThemeStyles();
     const popoverAnchor = useRef<View>(null);
     const StyleUtils = useStyleUtils();
-    const [isScreenFocused, setIsScreenFocused] = useState(false);
     const {shouldUseNarrowLayout} = useResponsiveLayout();
-
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-    const [report] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${optionItem?.reportID || -1}`);
+    const currentRouteName = navigationRef.getCurrentRoute()?.name;
+    const [isScreenFocused, setIsScreenFocused] = useState(shouldUseNarrowLayout ? currentRouteName === SCREENS.HOME : currentRouteName === SCREENS.REPORT);
+    const [report] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${optionItem?.reportID ?? -1}`);
     const [activePolicyID] = useOnyx(ONYXKEYS.NVP_ACTIVE_POLICY_ID);
+    const isConciergeChatReport = ReportUtils.isConciergeChatReport(report) && shouldUseNarrowLayout;
+    const isActiveWorkspaceChat = report?.isOwnPolicyExpenseChat && activePolicyID === report?.policyID;
+    const tooltipToRender = useMemo(() => {
+        // eslint-disable-next-line no-nested-ternary
+        return isConciergeChatReport ? CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP : isActiveWorkspaceChat ? CONST.PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP : undefined;
+    }, [isConciergeChatReport, isActiveWorkspaceChat]);
+    useEffect(() => {
+        if (!tooltipToRender) {
+            return;
+        }
+        const listener = () => {
+            const activeRoute = navigationRef.getCurrentRoute()?.name;
+            if (shouldUseNarrowLayout) {
+                setIsScreenFocused(activeRoute === SCREENS.HOME);
+                return;
+            }
+            setIsScreenFocused(activeRoute === SCREENS.REPORT);
+        };
+        navigationRef.addListener('state', listener);
+        return () => {
+            if (!tooltipToRender) {
+                return;
+            }
+            navigationRef.removeListener('state', listener);
+        };
+    }, [shouldUseNarrowLayout, tooltipToRender]);
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     // const [isFirstTimeNewExpensifyUser] = useOnyx(ONYXKEYS.NVP_IS_FIRST_TIME_NEW_EXPENSIFY_USER);
     // const [isOnboardingCompleted = true] = useOnyx(ONYXKEYS.NVP_ONBOARDING, {
     //     selector: hasCompletedGuidedSetupFlowSelector,
     // });
-    const isConciergeChatReport = ReportUtils.isConciergeChatReport(report) && shouldUseNarrowLayout;
-    const isActiveWorkspaceChat = report?.isOwnPolicyExpenseChat && activePolicyID === report?.policyID;
-    // eslint-disable-next-line no-nested-ternary
-    const tooltipToRender = isConciergeChatReport
-        ? CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP
-        : isActiveWorkspaceChat
-        ? CONST.PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP
-        : undefined;
-    const {shouldShowConciergeGBRTooltip, shouldShowWorkspaceChatLhnTooltip, renderProductTourElement, hideElement} = useProductTourContext(tooltipToRender);
-    console.log('tooltipToRender', tooltipToRender, shouldShowConciergeGBRTooltip, shouldShowWorkspaceChatLhnTooltip);
+    const {shouldShowProductTrainingElement, renderProductTourElement, hideElement} = useProductTourContext(tooltipToRender);
 
     const {translate} = useLocalize();
     const [isContextMenuActive, setIsContextMenuActive] = useState(false);
-
-    useFocusEffect(
-        useCallback(() => {
-            setIsScreenFocused(true);
-            return () => {
-                setIsScreenFocused(false);
-            };
-        }, []),
-    );
 
     const isInFocusMode = viewMode === CONST.OPTION_MODE.COMPACT;
     const sidebarInnerRowStyle = StyleSheet.flatten<ViewStyle>(
@@ -151,9 +159,13 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     const subscriptAvatarBorderColor = isFocused ? focusedBackgroundColor : theme.sidebar;
     const firstIcon = optionItem.icons?.at(0);
 
-    const shouldShowConciergeChatTooltip = shouldShowConciergeGBRTooltip && isScreenFocused && ReportUtils.isConciergeChatReport(report);
+    const shouldShowConciergeChatTooltip = shouldShowProductTrainingElement && tooltipToRender === CONST.PRODUCT_TRAINING_ELEMENTS.CONCIERGE_GBR_TOOLTIP && isScreenFocused;
 
-    const shouldShowActiveWorkspaceChatTooltip = shouldShowWorkspaceChatLhnTooltip && report?.isOwnPolicyExpenseChat && activePolicyID === report?.policyID;
+    const shouldShowActiveWorkspaceChatTooltip = shouldShowProductTrainingElement && tooltipToRender === CONST.PRODUCT_TRAINING_ELEMENTS.WORKSPACE_CHAT_LHN_TOOLTIP && isScreenFocused;
+
+    console.log('shouldShowConciergeChatTooltip', shouldShowConciergeChatTooltip, shouldShowProductTrainingElement, tooltipToRender, isScreenFocused);
+
+    const ToolTipOrWrapper = shouldShowConciergeChatTooltip || shouldShowActiveWorkspaceChatTooltip ? EducationalTooltip : React.Fragment;
 
     return (
         <OfflineWithFeedback
@@ -162,8 +174,9 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
             shouldShowErrorMessages={false}
             needsOffscreenAlphaCompositing
         >
-            <EducationalTooltip
+            <ToolTipOrWrapper
                 isScreenFocused={isScreenFocused}
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                 shouldRender={shouldShowConciergeChatTooltip || shouldShowActiveWorkspaceChatTooltip}
                 renderTooltipContent={renderProductTourElement}
                 anchorAlignment={{
@@ -173,7 +186,6 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
                 shiftHorizontal={shouldShowActiveWorkspaceChatTooltip ? 24 : variables.gbrTooltipShiftHorizontal}
                 shiftVertical={shouldShowActiveWorkspaceChatTooltip ? 6 : variables.composerTooltipShiftVertical}
                 wrapperStyle={styles.quickActionTooltipWrapper}
-                // onHideTooltip={shouldShowActiveWorkspaceChatTooltip ? setMigratedUserWorkspaceChatTooltipViewed : User.dismissGBRTooltip}
             >
                 <View>
                     <Hoverable>
@@ -347,7 +359,7 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
                         )}
                     </Hoverable>
                 </View>
-            </EducationalTooltip>
+            </ToolTipOrWrapper>
         </OfflineWithFeedback>
     );
 }

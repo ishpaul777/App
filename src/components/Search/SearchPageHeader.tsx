@@ -127,7 +127,8 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     // eslint-disable-next-line rulesdir/prefer-shouldUseNarrowLayout-instead-of-isSmallScreenWidth
     const {shouldUseNarrowLayout, isSmallScreenWidth} = useResponsiveLayout();
     const {selectedTransactions, clearSelectedTransactions, selectedReports} = useSearchContext();
-    const {renderProductTourElement, shouldShowFilterButtonTooltip, hideElement} = useProductTour(CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP);
+    const isFocused = useIsFocused();
+    const {renderProductTourElement, shouldShowProductTrainingElement, hideElement} = useProductTour(isFocused ? CONST.PRODUCT_TRAINING_ELEMENTS.FILTER_BUTTON_TOOLTIP : undefined);
     const [selectionMode] = useOnyx(ONYXKEYS.MOBILE_SELECTION_MODE);
     const personalDetails = usePersonalDetails();
     const [reports] = useOnyx(ONYXKEYS.COLLECTION.REPORT);
@@ -144,7 +145,6 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     const isCannedQuery = SearchQueryUtils.isCannedSearchQuery(queryJSON);
     const headerText = isCannedQuery ? translate(getHeaderContent(type).titleText) : SearchQueryUtils.buildUserReadableQueryString(queryJSON, personalDetails, cardList, reports, taxRates);
     const [inputValue, setInputValue] = useState(headerText);
-    const isFocused = useIsFocused();
 
     useEffect(() => {
         setInputValue(headerText);
@@ -333,7 +333,7 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
     }
 
     const onPress = () => {
-        if (shouldShowFilterButtonTooltip) {
+        if (shouldShowProductTrainingElement) {
             hideElement();
         }
         const filterFormValues = SearchQueryUtils.buildFilterFormValuesFromQuery(queryJSON, policyCategories, policyTagsLists, currencyList, personalDetails, cardList, reports, taxRates);
@@ -383,7 +383,7 @@ function SearchPageHeader({queryJSON, hash}: SearchPageHeaderProps) {
                 ) : (
                     <EducationalTooltip
                         isScreenFocused={isFocused}
-                        shouldRender={shouldShowFilterButtonTooltip && isFocused}
+                        shouldRender={shouldShowProductTrainingElement}
                         anchorAlignment={{
                             vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
                             horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
