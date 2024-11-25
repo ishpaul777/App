@@ -447,7 +447,7 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
             return;
         }
 
-        if (!shouldFetchReport(report)) {
+        if (!shouldFetchReport(report) && (isInitialPageReady || isLinkedMessagePageReady)) {
             return;
         }
         // When creating an optimistic report that already exists, we need to skip openReport
@@ -458,7 +458,7 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
         }
 
         fetchReport();
-    }, [report, fetchReport, reportIDFromRoute, isLoadingApp]);
+    }, [report, fetchReport, reportIDFromRoute, isLoadingApp, isInitialPageReady, isLinkedMessagePageReady]);
 
     const dismissBanner = useCallback(() => {
         setIsBannerVisible(false);
