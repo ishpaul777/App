@@ -1,5 +1,5 @@
 import type {ListRenderItemInfo} from '@react-native/virtualized-lists/Lists/VirtualizedList';
-import {useIsFocused, useRoute} from '@react-navigation/native';
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 // eslint-disable-next-line lodash/import-scope
 import type {DebouncedFunc} from 'lodash';
 import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -10,6 +10,7 @@ import type {OnyxEntry} from 'react-native-onyx';
 import InvertedFlatList from '@components/InvertedFlatList';
 import {AUTOSCROLL_TO_TOP_THRESHOLD} from '@components/InvertedFlatList/BaseInvertedFlatList';
 import {usePersonalDetails} from '@components/OnyxProvider';
+import {useReportActionHighlight} from '@components/ReportActionHighlightProvider';
 import useCurrentUserPersonalDetails from '@hooks/useCurrentUserPersonalDetails';
 import useLocalize from '@hooks/useLocalize';
 import useNetworkWithOfflineStatus from '@hooks/useNetworkWithOfflineStatus';
@@ -159,7 +160,7 @@ function ReportActionsList({
     const {translate} = useLocalize();
     const {windowHeight} = useWindowDimensions();
     const {shouldUseNarrowLayout} = useResponsiveLayout();
-
+    const navigation = useNavigation();
     const {preferredLocale} = useLocalize();
     const {isOffline, lastOfflineAt, lastOnlineAt} = useNetworkWithOfflineStatus();
     const route = useRoute<PlatformStackRouteProp<AuthScreensParamList, typeof SCREENS.REPORT>>();
@@ -401,6 +402,30 @@ function ReportActionsList({
         }
         // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps
     }, [report.lastVisibleActionCreated, report.reportID, isVisible]);
+
+    const {linkedReportActionID: contextlinkedReportActionID, removeHighlight, setHighlight} = useReportActionHighlight();
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('blur', () => {
+            if (route?.params?.reportActionID !== contextlinkedReportActionID) {
+                return;
+            }
+            InteractionManager.runAfterInteractions(() => {
+                removeHighlight();
+                if (shouldUseNarrowLayout) {
+                    Navigation.setParams({reportActionID: ''});
+                }
+            });
+        });
+        return unsubscribe;
+    }, [route, removeHighlight, report.reportID, navigation, contextlinkedReportActionID, shouldUseNarrowLayout]);
+
+    useEffect(() => {
+        if (!route?.params?.reportActionID) {
+            return;
+        }
+        setHighlight(route?.params?.reportActionID);
+    }, [route, setHighlight]);
 
     useEffect(() => {
         if (linkedReportActionID) {

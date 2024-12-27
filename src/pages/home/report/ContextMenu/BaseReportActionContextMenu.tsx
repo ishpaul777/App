@@ -9,6 +9,7 @@ import {useOnyx} from 'react-native-onyx';
 import type {ContextMenuItemHandle} from '@components/ContextMenuItem';
 import ContextMenuItem from '@components/ContextMenuItem';
 import FocusTrapForModal from '@components/FocusTrap/FocusTrapForModal';
+import {useReportActionHighlight} from '@components/ReportActionHighlightProvider';
 import useArrowKeyFocusManager from '@hooks/useArrowKeyFocusManager';
 import useEnvironment from '@hooks/useEnvironment';
 import useKeyboardShortcut from '@hooks/useKeyboardShortcut';
@@ -212,6 +213,7 @@ function BaseReportActionContextMenu({
                 user,
             }),
     );
+    const {removeHighlight} = useReportActionHighlight();
 
     if (isMini) {
         const menuAction = filteredContextMenuActions.at(-1);
@@ -334,6 +336,7 @@ function BaseReportActionContextMenu({
                             setIsEmojiPickerActive,
                             moneyRequestAction,
                             hasCard: !!card,
+                            removeHighlight: isMini ? removeHighlight : () => {},
                         };
 
                         if ('renderContent' in contextAction) {

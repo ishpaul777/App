@@ -12,6 +12,7 @@ import * as Expensicons from '@components/Icon/Expensicons';
 import type {PopoverMenuItem} from '@components/PopoverMenu';
 import PopoverMenu from '@components/PopoverMenu';
 import {useProductTrainingContext} from '@components/ProductTrainingContext';
+import {useReportActionHighlight} from '@components/ReportActionHighlightProvider';
 import useEnvironment from '@hooks/useEnvironment';
 import useLocalize from '@hooks/useLocalize';
 import useNetwork from '@hooks/useNetwork';
@@ -212,6 +213,8 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu}: Fl
         CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.QUICK_ACTION_BUTTON,
         isCreateMenuActive && (!shouldUseNarrowLayout || isFocused),
     );
+
+    const {removeHighlight} = useReportActionHighlight();
 
     /**
      * There are scenarios where users who have not yet had their group workspace-chats in NewDot (isPolicyExpenseChatEnabled). In those scenarios, things can get confusing if they try to submit/track expenses. To address this, we block them from Creating, Tracking, Submitting expenses from NewDot if they are:
@@ -502,6 +505,7 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu}: Fl
                                   text: translate('tour.takeATwoMinuteTour'),
                                   description: translate('tour.exploreExpensify'),
                                   onSelected: () => {
+                                      removeHighlight();
                                       Link.openExternalLink(navatticURL);
                                       Welcome.setSelfTourViewed(Session.isAnonymousUser());
                                       if (viewTourTaskReport) {

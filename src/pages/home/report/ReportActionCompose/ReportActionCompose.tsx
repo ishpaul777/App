@@ -18,6 +18,7 @@ import OfflineIndicator from '@components/OfflineIndicator';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
 import {usePersonalDetails} from '@components/OnyxProvider';
 import {useProductTrainingContext} from '@components/ProductTrainingContext';
+import {useReportActionHighlight} from '@components/ReportActionHighlightProvider';
 import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import useCurrentUserPersonalDetails from '@hooks/useCurrentUserPersonalDetails';
 import useDebounce from '@hooks/useDebounce';
@@ -141,6 +142,7 @@ function ReportActionCompose({
         shouldShowEducationalTooltip,
     );
 
+    const {removeHighlight} = useReportActionHighlight();
     /**
      * Updates the Highlight state of the composer
      */
@@ -293,14 +295,16 @@ function ReportActionCompose({
                 Timing.start(CONST.TIMING.SEND_MESSAGE);
                 onSubmit(newCommentTrimmed);
             }
+            removeHighlight();
         },
-        [onSubmit, reportID],
+        [removeHighlight, onSubmit, reportID],
     );
 
     const onTriggerAttachmentPicker = useCallback(() => {
+        removeHighlight();
         isNextModalWillOpenRef.current = true;
         isKeyboardVisibleWhenShowingModalRef.current = true;
-    }, []);
+    }, [removeHighlight]);
 
     const onBlur = useCallback(
         (event: NativeSyntheticEvent<TextInputFocusEventData>) => {

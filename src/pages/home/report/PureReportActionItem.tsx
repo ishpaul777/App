@@ -18,6 +18,7 @@ import OfflineWithFeedback from '@components/OfflineWithFeedback';
 import PressableWithSecondaryInteraction from '@components/PressableWithSecondaryInteraction';
 import ReportActionItemEmojiReactions from '@components/Reactions/ReportActionItemEmojiReactions';
 import RenderHTML from '@components/RenderHTML';
+import {useReportActionHighlight} from '@components/ReportActionHighlightProvider';
 import type {ActionableItem} from '@components/ReportActionItem/ActionableItemButtons';
 import ActionableItemButtons from '@components/ReportActionItem/ActionableItemButtons';
 import ChronosOOOListActions from '@components/ReportActionItem/ChronosOOOListActions';
@@ -318,9 +319,11 @@ function PureReportActionItem({
         ReportActionsUtils.isActionableMentionWhisper(action) || ReportActionsUtils.isActionableTrackExpense(action) || ReportActionsUtils.isActionableReportMentionWhisper(action);
     const originalMessage = ReportActionsUtils.getOriginalMessage(action);
 
+    const {linkedReportActionID: contextlinkedReportActionID} = useReportActionHighlight();
+
     const highlightedBackgroundColorIfNeeded = useMemo(
-        () => (isReportActionLinked ? StyleUtils.getBackgroundColorStyle(theme.messageHighlightBG) : {}),
-        [StyleUtils, isReportActionLinked, theme.messageHighlightBG],
+        () => (isReportActionLinked && contextlinkedReportActionID === action.reportActionID ? StyleUtils.getBackgroundColorStyle(theme.messageHighlightBG) : {}),
+        [StyleUtils, action.reportActionID, contextlinkedReportActionID, isReportActionLinked, theme.messageHighlightBG],
     );
 
     const isDeletedParentAction = ReportActionsUtils.isDeletedParentAction(action);
