@@ -1,20 +1,17 @@
-import {NavigationContext} from '@react-navigation/native';
-import React, {memo, useContext, useEffect, useRef, useState} from 'react';
-import type {LayoutRectangle, NativeSyntheticEvent} from 'react-native';
+import { NavigationContext, useFocusEffect, useNavigation, useNavigationState } from '@react-navigation/native';
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import type { LayoutRectangle, NativeSyntheticEvent } from 'react-native';
 import GenericTooltip from '@components/Tooltip/GenericTooltip';
-import type {EducationalTooltipProps} from '@components/Tooltip/types';
+import type { EducationalTooltipProps } from '@components/Tooltip/types';
 import measureTooltipCoordinate from './measureTooltipCoordinate';
+import { BoundsObserver } from '@react-ng/bounds-observer';
+type LayoutChangeEventWithTarget = NativeSyntheticEvent<{ layout: LayoutRectangle; target: HTMLElement }>;
 
-type LayoutChangeEventWithTarget = NativeSyntheticEvent<{layout: LayoutRectangle; target: HTMLElement}>;
-
-/**
- * A component used to wrap an element intended for displaying a tooltip.
- * This tooltip would show immediately without user's interaction and hide after 5 seconds.
- */
-function BaseEducationalTooltip({children, shouldRender = false, shouldHideOnNavigate = true, ...props}: EducationalTooltipProps) {
+function BaseEducationalTooltip({ children, shouldRender = false, shouldHideOnNavigate = true, name, root, ...props }: EducationalTooltipProps) {
     const hideTooltipRef = useRef<() => void>();
-
     const [shouldMeasure, setShouldMeasure] = useState(false);
+    const [isVisibleElement, setIsVisibleElement] = useState(false);
+
     const show = useRef<() => void>();
 
     const navigator = useContext(NavigationContext);
@@ -54,27 +51,70 @@ function BaseEducationalTooltip({children, shouldRender = false, shouldHideOnNav
         });
         return unsubscribe;
     }, [navigator, shouldHideOnNavigate]);
+    const elementRef = useRef();
+
+    const getBounds = (bounds: DOMRect): LayoutRectangle => {
+        const targetElement = elementRef.current?._childNode;
+
+        if (targetElement && 'getBoundingClientRect' in targetElement) {
+            const recTarget = targetElement.getBoundingClientRect()
+            const elementAtPoint = document.elementFromPoint(bounds.x, bounds.y);
+            console.log('elementAtPoint', elementAtPoint)
+            if (elementAtPoint && 'contains' in elementAtPoint && targetElement && 'contains' in targetElement) {
+                const isElementVisible =
+                    elementAtPoint instanceof HTMLElement &&
+                    (targetElement?.contains(elementAtPoint) || elementAtPoint?.contains(targetElement));
+                setIsVisibleElement(isElementVisible)
+            }
+        }
+
+
+        return bounds;
+    };
 
     return (
         <GenericTooltip
             shouldForceAnimate
-            shouldRender={shouldRender}
+            shouldRender={shouldRender && isVisibleElement}
+            name={name}
+            // intersectionObserverEntry={entry}
             // eslint-disable-next-line react/jsx-props-no-spreading
             {...props}
         >
-            {({showTooltip, hideTooltip, updateTargetBounds}) => {
+            {({ showTooltip, hideTooltip, updateTargetBounds }) => {
                 // eslint-disable-next-line react-compiler/react-compiler
                 hideTooltipRef.current = hideTooltip;
-                return React.cloneElement(children as React.ReactElement, {
-                    onLayout: (e: LayoutChangeEventWithTarget) => {
-                        if (!shouldMeasure) {
-                            setShouldMeasure(true);
-                        }
-                        // e.target is specific to native, use e.nativeEvent.target on web instead
-                        const target = e.target || e.nativeEvent.target;
-                        show.current = () => measureTooltipCoordinate(target, updateTargetBounds, showTooltip);
-                    },
-                });
+                // return React.cloneElement(children as React.ReactElement, {
+                //     onLayout: (e: LayoutChangeEventWithTarget) => {
+                //         if (!shouldMeasure) {
+                //             setShouldMeasure(true);
+                //         }
+                //         // e.target is specific to native, use e.nativeEvent.target on web instead
+                //         const target = e.target || e.nativeEvent.target;
+                //         show.current = () => measureTooltipCoordinate(target, updateTargetBounds, showTooltip);
+                //     },
+                // })
+                return (
+                    <BoundsObserver
+                        enabled={shouldRender}
+                        onBoundsChange={(bounds) => {
+                            updateTargetBounds(getBounds(bounds));
+                        }}
+                        ref={elementRef}
+                    >
+                        {React.cloneElement(children as React.ReactElement, {
+                            onLayout: (e: LayoutChangeEventWithTarget) => {
+                                if (!shouldMeasure) {
+                                    setShouldMeasure(true);
+                                }
+                                // e.target is specific to native, use e.nativeEvent.target on web instead
+                                const target = e.target || e.nativeEvent.target;
+                                show.current = () => measureTooltipCoordinate(target, updateTargetBounds, showTooltip);
+                            },
+                        })}
+                    </BoundsObserver>
+                )
+
             }}
         </GenericTooltip>
     );
