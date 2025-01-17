@@ -14,7 +14,6 @@ function BaseEducationalTooltip({ children, shouldRender = false, shouldHideOnNa
 
     const show = useRef<() => void>();
 
-    const show = useRef<() => void>();
     const navigator = useContext(NavigationContext);
 
     useEffect(() => {
@@ -57,14 +56,18 @@ function BaseEducationalTooltip({ children, shouldRender = false, shouldHideOnNa
     const getBounds = (bounds: DOMRect): LayoutRectangle => {
         const targetElement = elementRef.current?._childNode;
 
-
-        const elementAtPoint = document.elementFromPoint(bounds.x, bounds.y);
-        if (elementAtPoint && 'contains' in elementAtPoint && targetElement && 'contains' in targetElement) {
-            const isElementVisible =
-                elementAtPoint instanceof HTMLElement &&
-                (targetElement?.contains(elementAtPoint) || elementAtPoint?.contains(targetElement));
-            setIsVisibleElement(isElementVisible)
+        if (targetElement && 'getBoundingClientRect' in targetElement) {
+            const recTarget = targetElement.getBoundingClientRect()
+            const elementAtPoint = document.elementFromPoint(bounds.x, bounds.y);
+            console.log('elementAtPoint', elementAtPoint)
+            if (elementAtPoint && 'contains' in elementAtPoint && targetElement && 'contains' in targetElement) {
+                const isElementVisible =
+                    elementAtPoint instanceof HTMLElement &&
+                    (targetElement?.contains(elementAtPoint) || elementAtPoint?.contains(targetElement));
+                setIsVisibleElement(isElementVisible)
+            }
         }
+
 
         return bounds;
     };
