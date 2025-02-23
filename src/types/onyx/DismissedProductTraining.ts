@@ -10,6 +10,7 @@ const {
     LHN_WORKSPACE_CHAT_TOOLTIP,
     GLOBAL_CREATE_TOOLTIP,
     SCAN_TEST_TOOLTIP,
+    ONBOARDING_TASK_TOOLTIP,
 } = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES;
 
 /**
@@ -75,6 +76,11 @@ type DismissedProductTraining = {
      * When user dismisses the globalCreateTooltip product training tooltip, we store the timestamp here.
      */
     [SCAN_TEST_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the onboardingTaskTooltip product training tooltip, we store the timestamp here.
+     */
+    [ONBOARDING_TASK_TOOLTIP]: DismissedProductTrainingElement;
 };
 
 export default DismissedProductTraining;
