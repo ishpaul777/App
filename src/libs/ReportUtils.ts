@@ -1187,7 +1187,9 @@ function isCanceledTaskReport(report: OnyxInputOrEntry<Report>, parentReportActi
  *
  * @param parentReportAction - The parent report action of the report (Used to check if the task has been canceled)
  */
-function isOpenTaskReport(report: OnyxInputOrEntry<Report>, parentReportAction: OnyxInputOrEntry<ReportAction> = null): boolean {
+function isOpenTaskReport(reportOrID: OnyxInputOrEntry<Report> | string, parentReportAction: OnyxInputOrEntry<ReportAction> = null, reports: OnyxCollection<Report> = allReports): boolean {
+    const report = typeof reportOrID === 'string' ? getReport(reportOrID, reports) : reportOrID;
+
     return (
         isTaskReport(report) && !isCanceledTaskReport(report, parentReportAction) && report?.stateNum === CONST.REPORT.STATE_NUM.OPEN && report?.statusNum === CONST.REPORT.STATUS_NUM.OPEN
     );

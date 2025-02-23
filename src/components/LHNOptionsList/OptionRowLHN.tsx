@@ -60,11 +60,13 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     const [activePolicyID] = useOnyx(ONYXKEYS.NVP_ACTIVE_POLICY_ID);
     const [introSelected] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED);
     const [isFullscreenVisible] = useOnyx(ONYXKEYS.FULLSCREEN_VISIBILITY);
+    const [tryNewDot] = useOnyx(ONYXKEYS.NVP_TRYNEWDOT);
     const session = useSession();
     const shouldShowWokspaceChatTooltip = isPolicyExpenseChat(report) && activePolicyID === report?.policyID && session?.accountID === report?.ownerAccountID;
     const isOnboardingGuideAssigned = introSelected?.choice === CONST.ONBOARDING_CHOICES.MANAGE_TEAM && !session?.email?.includes('+');
     const isChatUsedForOnboarding = isChatUsedForOnboardingReportUtils(report, introSelected?.choice);
-    const shouldShowGetStartedTooltip = isOnboardingGuideAssigned ? isAdminRoom(report) && isChatUsedForOnboarding : isConciergeChatReport(report);
+    const hasBeenAddedToNudgeMigration = !!tryNewDot?.nudgeMigration?.timestamp;
+    const shouldShowGetStartedTooltip = isOnboardingGuideAssigned ? isAdminRoom(report) && isChatUsedForOnboarding && !hasBeenAddedToNudgeMigration : isConciergeChatReport(report);
 
     const isReportsSplitNavigatorLast = useRootNavigationState((state) => state?.routes?.at(-1)?.name === NAVIGATORS.REPORTS_SPLIT_NAVIGATOR);
 

@@ -133,6 +133,16 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
         shouldShow: () => false,
         shouldRenderActionButtons: true,
     },
+    [ONBOARDING_TASK_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.onboardingTaskTooltip.part1', isBold: true},
+            {text: 'productTrainingTooltip.onboardingTaskTooltip.part2', isBold: false},
+        ],
+        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(ONBOARDING_TASK_TOOLTIP, isDismissedUsingX),
+        name: ONBOARDING_TASK_TOOLTIP,
+        priority: 1100,
+        shouldShow: () => true,
+    },
 };
 
 export default TOOLTIPS;

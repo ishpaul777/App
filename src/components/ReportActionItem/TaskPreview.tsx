@@ -1,6 +1,6 @@
 import {Str} from 'expensify-common';
-import React from 'react';
-import {View} from 'react-native';
+import React, { useState } from 'react';
+import {InteractionManager, View} from 'react-native';
 import type {StyleProp, ViewStyle} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import type {OnyxEntry} from 'react-native-onyx';
@@ -10,13 +10,16 @@ import Icon from '@components/Icon';
 import * as Expensicons from '@components/Icon/Expensicons';
 import {usePersonalDetails} from '@components/OnyxProvider';
 import PressableWithoutFeedback from '@components/Pressable/PressableWithoutFeedback';
+import {useProductTrainingContext} from '@components/ProductTrainingContext';
 import RenderHTML from '@components/RenderHTML';
 import {showContextMenuForReport} from '@components/ShowContextMenuContext';
 import Text from '@components/Text';
+import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import UserDetailsTooltip from '@components/UserDetailsTooltip';
 import withCurrentUserPersonalDetails from '@components/withCurrentUserPersonalDetails';
 import type {WithCurrentUserPersonalDetailsProps} from '@components/withCurrentUserPersonalDetails';
 import useLocalize from '@hooks/useLocalize';
+import useOnboardingTasks from '@hooks/useOnboardingTasks';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
@@ -34,6 +37,8 @@ import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type {ReportAction} from '@src/types/onyx';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
+import variables from '@styles/variables';
+import { useFocusEffect } from '@react-navigation/native';
 
 type TaskPreviewProps = WithCurrentUserPersonalDetailsProps & {
     /** The ID of the associated policy */
@@ -67,6 +72,25 @@ function TaskPreview({taskReportID, action, contextMenuAnchor, chatReportID, che
     const {translate} = useLocalize();
     const theme = useTheme();
     const [taskReport] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${taskReportID}`);
+    const isFirstOpenOnboardingTask = useOnboardingTasks(taskReportID ?? '');
+    const [isScreenTransitionEnded, setIsScreenTransitionEnded] = useState(false);
+    useFocusEffect(
+        React.useCallback(() => {
+            const task = InteractionManager.runAfterInteractions(() => {
+                setIsScreenTransitionEnded(true);
+            });
+
+            return () => {
+                task.cancel();
+                setIsScreenTransitionEnded(false);
+            };
+        }, []),
+    );
+
+    const {shouldShowProductTrainingTooltip, renderProductTrainingTooltip, hideProductTrainingTooltip} = useProductTrainingContext(
+        CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.ONBOARDING_TASK_TOOLTIP,
+        isFirstOpenOnboardingTask && isScreenTransitionEnded,
+    );
 
     // The reportAction might not contain details regarding the taskReport
     // Only the direct parent reportAction will contain details about the taskReport
@@ -92,61 +116,73 @@ function TaskPreview({taskReportID, action, contextMenuAnchor, chatReportID, che
 
     return (
         <View style={[styles.chatItemMessage, !hasAssignee && styles.mv1]}>
-            <PressableWithoutFeedback
-                onPress={() => Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(taskReportID))}
-                onPressIn={() => canUseTouchScreen() && ControlSelection.block()}
-                onPressOut={() => ControlSelection.unblock()}
-                onLongPress={(event) => showContextMenuForReport(event, contextMenuAnchor, chatReportID, action, checkIfContextMenuActive)}
-                shouldUseHapticsOnLongPress
-                style={[styles.flexRow, styles.justifyContentBetween, style]}
-                role={CONST.ROLE.BUTTON}
-                accessibilityLabel={translate('task.task')}
+            <EducationalTooltip
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                shouldRender={shouldShowProductTrainingTooltip}
+                renderTooltipContent={renderProductTrainingTooltip}
+                anchorAlignment={{
+                    horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
+                    vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
+                }}
+                wrapperStyle={styles.productTrainingTooltipWrapper}
+                shiftHorizontal={variables.gbrTooltipShiftHorizontal}
             >
-                <View style={[styles.flex1, styles.flexRow, styles.alignItemsStart, styles.mr2]}>
-                    <View style={iconWrapperStyle}>
-                        <Checkbox
-                            style={[styles.mr2]}
-                            isChecked={isTaskCompleted}
-                            disabled={!canActionTask(taskReport, currentUserPersonalDetails.accountID, taskOwnerAccountID, taskAssigneeAccountID)}
-                            onPress={callFunctionIfActionIsAllowed(() => {
-                                if (isTaskCompleted) {
-                                    reopenTask(taskReport, taskReportID);
-                                } else {
-                                    completeTask(taskReport, taskReportID);
-                                }
-                            })}
-                            accessibilityLabel={translate('task.task')}
-                        />
+                <PressableWithoutFeedback
+                    onPress={() => Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(taskReportID))}
+                    onPressIn={() => canUseTouchScreen() && ControlSelection.block()}
+                    onPressOut={() => ControlSelection.unblock()}
+                    onLongPress={(event) => showContextMenuForReport(event, contextMenuAnchor, chatReportID, action, checkIfContextMenuActive)}
+                    shouldUseHapticsOnLongPress
+                    style={[styles.flexRow, styles.justifyContentBetween, style]}
+                    role={CONST.ROLE.BUTTON}
+                    accessibilityLabel={translate('task.task')}
+                >
+                    <View style={[styles.flex1, styles.flexRow, styles.alignItemsStart, styles.mr2]}>
+                        <View style={iconWrapperStyle}>
+                            <Checkbox
+                                style={[styles.mr2]}
+                                isChecked={isTaskCompleted}
+                                disabled={!canActionTask(taskReport, currentUserPersonalDetails.accountID, taskOwnerAccountID, taskAssigneeAccountID)}
+                                onPress={callFunctionIfActionIsAllowed(() => {
+                                    if (isTaskCompleted) {
+                                        reopenTask(taskReport, taskReportID);
+                                    } else {
+                                        completeTask(taskReport, taskReportID);
+                                    }
+                                })}
+                                accessibilityLabel={translate('task.task')}
+                            />
+                        </View>
+                        {hasAssignee && (
+                            <UserDetailsTooltip accountID={taskAssigneeAccountID}>
+                                <View>
+                                    <Avatar
+                                        containerStyles={[styles.mr2, isTaskCompleted ? styles.opacitySemiTransparent : undefined]}
+                                        source={avatar}
+                                        size={avatarSize}
+                                        avatarID={taskAssigneeAccountID}
+                                        type={CONST.ICON_TYPE_AVATAR}
+                                    />
+                                </View>
+                            </UserDetailsTooltip>
+                        )}
+                        <Text style={titleStyle}>{taskTitle}</Text>
                     </View>
-                    {hasAssignee && (
-                        <UserDetailsTooltip accountID={taskAssigneeAccountID}>
-                            <View>
-                                <Avatar
-                                    containerStyles={[styles.mr2, isTaskCompleted ? styles.opacitySemiTransparent : undefined]}
-                                    source={avatar}
-                                    size={avatarSize}
-                                    avatarID={taskAssigneeAccountID}
-                                    type={CONST.ICON_TYPE_AVATAR}
-                                />
-                            </View>
-                        </UserDetailsTooltip>
+                    {shouldShowGreenDotIndicator && (
+                        <View style={iconWrapperStyle}>
+                            <Icon
+                                src={Expensicons.DotIndicator}
+                                fill={theme.success}
+                            />
+                        </View>
                     )}
-                    <Text style={titleStyle}>{taskTitle}</Text>
-                </View>
-                {shouldShowGreenDotIndicator && (
-                    <View style={iconWrapperStyle}>
-                        <Icon
-                            src={Expensicons.DotIndicator}
-                            fill={theme.success}
-                        />
-                    </View>
-                )}
-                <Icon
-                    src={Expensicons.ArrowRight}
-                    fill={StyleUtils.getIconFillColor(getButtonState(isHovered))}
-                    additionalStyles={iconWrapperStyle}
-                />
-            </PressableWithoutFeedback>
+                    <Icon
+                        src={Expensicons.ArrowRight}
+                        fill={StyleUtils.getIconFillColor(getButtonState(isHovered))}
+                        additionalStyles={iconWrapperStyle}
+                    />
+                </PressableWithoutFeedback>
+            </EducationalTooltip>
         </View>
     );
 }

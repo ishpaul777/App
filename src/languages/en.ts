@@ -5953,6 +5953,10 @@ const translations = {
             tryItOut: 'Try it out',
             noThanks: 'No thanks',
         },
+        onboardingTaskTooltip: {
+            part1: 'Complete setup',
+            part2: ' tasks',
+        },
     },
     discardChangesConfirmation: {
         title: 'Discard changes?',

@@ -6475,6 +6475,10 @@ const translations = {
             tryItOut: 'Prueba esto',
             noThanks: 'No, gracias',
         },
+        onboardingTaskTooltip: {
+            part1: 'Completa la configuración',
+            part2: ' tareas',
+        },
     },
     discardChangesConfirmation: {
         title: '¿Descartar cambios?',

@@ -6676,6 +6676,7 @@ const CONST = {
         LHN_WORKSPACE_CHAT_TOOLTIP: 'workspaceChatLHNTooltip',
         GLOBAL_CREATE_TOOLTIP: 'globalCreateTooltip',
         SCAN_TEST_TOOLTIP: 'scanTestTooltip',
+        ONBOARDING_TASK_TOOLTIP: 'onboardingTaskTooltip',
     },
     SMART_BANNER_HEIGHT: 152,
 
