@@ -1,5 +1,6 @@
 import type {ValueOf} from 'type-fest';
 import {dismissProductTraining} from '@libs/actions/Welcome';
+import type {OnboardingPurpose} from '@src/CONST';
 import CONST from '@src/CONST';
 import type {TranslationPaths} from '@src/languages/types';
 
@@ -20,6 +21,7 @@ type ProductTrainingTooltipName = ValueOf<typeof CONST.PRODUCT_TRAINING_TOOLTIP_
 
 type ShouldShowConditionProps = {
     shouldUseNarrowLayout?: boolean;
+    introSelectedChoice?: OnboardingPurpose;
 };
 
 type TooltipData = {
@@ -141,7 +143,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
         onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(ONBOARDING_TASK_TOOLTIP, isDismissedUsingX),
         name: ONBOARDING_TASK_TOOLTIP,
         priority: 1100,
-        shouldShow: () => true,
+        shouldShow: ({introSelectedChoice}) => introSelectedChoice === CONST.SELECTABLE_ONBOARDING_CHOICES.MANAGE_TEAM,
     },
 };
 

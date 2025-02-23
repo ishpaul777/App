@@ -38,6 +38,7 @@ function ProductTrainingContextProvider({children}: ChildrenProps) {
     const [isOnboardingCompleted = true, isOnboardingCompletedMetadata] = useOnyx(ONYXKEYS.NVP_ONBOARDING, {
         selector: hasCompletedGuidedSetupFlowSelector,
     });
+    const [introSelected] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED);
 
     const [dismissedProductTraining] = useOnyx(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING);
     const {shouldUseNarrowLayout} = useResponsiveLayout();
@@ -109,9 +110,10 @@ function ProductTrainingContextProvider({children}: ChildrenProps) {
 
             return tooltipConfig.shouldShow({
                 shouldUseNarrowLayout,
+                introSelectedChoice: introSelected?.choice,
             });
         },
-        [dismissedProductTraining, hasBeenAddedToNudgeMigration, isOnboardingCompleted, isOnboardingCompletedMetadata, shouldUseNarrowLayout, isModalVisible, isLoadingApp],
+        [dismissedProductTraining, hasBeenAddedToNudgeMigration, isOnboardingCompleted, isOnboardingCompletedMetadata, shouldUseNarrowLayout, isModalVisible, isLoadingApp, introSelected],
     );
 
     const registerTooltip = useCallback(
