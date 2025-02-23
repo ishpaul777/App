@@ -1,5 +1,6 @@
+import {useFocusEffect} from '@react-navigation/native';
 import {Str} from 'expensify-common';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {InteractionManager, View} from 'react-native';
 import type {StyleProp, ViewStyle} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
@@ -32,13 +33,12 @@ import Navigation from '@libs/Navigation/Navigation';
 import {isCanceledTaskReport, isOpenTaskReport, isReportManager} from '@libs/ReportUtils';
 import {getTaskTitleFromReport} from '@libs/TaskUtils';
 import type {ContextMenuAnchor} from '@pages/home/report/ContextMenu/ReportActionContextMenu';
+import variables from '@styles/variables';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type {ReportAction} from '@src/types/onyx';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
-import variables from '@styles/variables';
-import { useFocusEffect } from '@react-navigation/native';
 
 type TaskPreviewProps = WithCurrentUserPersonalDetailsProps & {
     /** The ID of the associated policy */
