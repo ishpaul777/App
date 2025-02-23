@@ -4,6 +4,7 @@ import {useOnyx} from 'react-native-onyx';
 import Button from '@components/Button';
 import Icon from '@components/Icon';
 import * as Expensicons from '@components/Icon/Expensicons';
+import PressableWithoutFeedback from '@components/Pressable/PressableWithoutFeedback';
 import Text from '@components/Text';
 import useLocalize from '@hooks/useLocalize';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
@@ -85,7 +86,8 @@ function ProductTrainingContextProvider({children}: ChildrenProps) {
                 return false;
             }
 
-            const isDismissed = !!dismissedProductTraining?.[tooltipName];
+            const isDismissed =
+                typeof dismissedProductTraining?.[tooltipName] === 'string' ? dismissedProductTraining?.[tooltipName] : dismissedProductTraining?.[tooltipName]?.dismissedTime;
 
             if (isDismissed) {
                 return false;
@@ -183,6 +185,22 @@ const useProductTrainingContext = (tooltipName: ProductTrainingTooltipName, shou
      */
     useLayoutEffect(parseFSAttributes, []);
 
+    const shouldShowProductTrainingTooltip = useMemo(() => {
+        return shouldShow && shouldRenderTooltip(tooltipName);
+    }, [shouldRenderTooltip, tooltipName, shouldShow]);
+
+    const hideProductTrainingTooltip = useCallback(
+        (isDismissedUsingX = false) => {
+            if (!shouldShowProductTrainingTooltip) {
+                return;
+            }
+            const tooltip = TOOLTIPS[tooltipName];
+            tooltip.onHideTooltip(isDismissedUsingX);
+            unregisterTooltip(tooltipName);
+        },
+        [tooltipName, shouldShowProductTrainingTooltip, unregisterTooltip],
+    );
+
     const renderProductTrainingTooltip = useCallback(() => {
         const tooltip = TOOLTIPS[tooltipName];
         return (
@@ -209,6 +227,20 @@ const useProductTrainingContext = (tooltipName: ProductTrainingTooltipName, shou
                             );
                         })}
                     </Text>
+                    <PressableWithoutFeedback
+                        onPress={() => {
+                            hideProductTrainingTooltip(true);
+                        }}
+                        style={[styles.flexRow, styles.alignItemsCenter, styles.flex1]}
+                        accessibilityLabel={translate('productTrainingTooltip.scanTestTooltip.noThanks')}
+                        role={CONST.ROLE.BUTTON}
+                    >
+                        <Icon
+                            src={Expensicons.Clear}
+                            fill={theme.icon}
+                            medium
+                        />
+                    </PressableWithoutFeedback>
                 </View>
                 {!!tooltip?.shouldRenderActionButtons && (
                     <View style={[styles.alignItemsCenter, styles.justifyContentBetween, styles.flexRow, styles.ph1, styles.pb1]}>
@@ -241,23 +273,12 @@ const useProductTrainingContext = (tooltipName: ProductTrainingTooltipName, shou
         styles.textAlignCenter,
         styles.textBold,
         styles.textWrap,
+        theme.icon,
         theme.tooltipHighlightText,
         tooltipName,
         translate,
+        hideProductTrainingTooltip,
     ]);
-
-    const shouldShowProductTrainingTooltip = useMemo(() => {
-        return shouldShow && shouldRenderTooltip(tooltipName);
-    }, [shouldRenderTooltip, tooltipName, shouldShow]);
-
-    const hideProductTrainingTooltip = useCallback(() => {
-        if (!shouldShowProductTrainingTooltip) {
-            return;
-        }
-        const tooltip = TOOLTIPS[tooltipName];
-        tooltip.onHideTooltip();
-        unregisterTooltip(tooltipName);
-    }, [tooltipName, shouldShowProductTrainingTooltip, unregisterTooltip]);
 
     return {
         renderProductTrainingTooltip,
