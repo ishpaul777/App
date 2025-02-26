@@ -3,10 +3,12 @@ import React, {useRef} from 'react';
 import type {ScrollView as RNScrollView} from 'react-native';
 import Button from '@components/Button';
 import * as Expensicons from '@components/Icon/Expensicons';
+import {useProductTrainingContext} from '@components/ProductTrainingContext';
 import ScrollView from '@components/ScrollView';
 import {useSearchContext} from '@components/Search/SearchContext';
 import type {ChatSearchStatus, ExpenseSearchStatus, InvoiceSearchStatus, SearchQueryJSON, TripSearchStatus} from '@components/Search/types';
 import SearchStatusSkeleton from '@components/Skeletons/SearchStatusSkeleton';
+import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import useLocalize from '@hooks/useLocalize';
 import useSingleExecution from '@hooks/useSingleExecution';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -14,6 +16,7 @@ import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import Navigation from '@libs/Navigation/Navigation';
 import {buildSearchQueryString} from '@libs/SearchQueryUtils';
+import variables from '@styles/variables';
 import CONST from '@src/CONST';
 import type {TranslationPaths} from '@src/languages/types';
 import type {SearchDataTypes} from '@src/types/onyx/SearchResults';
@@ -168,6 +171,9 @@ function SearchStatusBar({queryJSON, onStatusChange}: SearchStatusBarProps) {
     const scrollRef = useRef<RNScrollView>(null);
     const isScrolledRef = useRef(false);
     const {shouldShowStatusBarLoading} = useSearchContext();
+    const {renderProductTrainingTooltip, shouldShowProductTrainingTooltip, hideProductTrainingTooltip} = useProductTrainingContext(
+        CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.OUTSTANDING_EXPENSE_FILTER_TOOLTIP,
+    );
 
     if (shouldShowStatusBarLoading) {
         return <SearchStatusSkeleton shouldAnimate />;
@@ -181,37 +187,52 @@ function SearchStatusBar({queryJSON, onStatusChange}: SearchStatusBarProps) {
             showsHorizontalScrollIndicator={false}
         >
             {options.map((item, index) => {
+                const isActive = Array.isArray(queryJSON.status) ? queryJSON.status.includes(item.status) : queryJSON.status === item.status;
                 const onPress = singleExecution(() => {
+                    if (item.status === CONST.SEARCH.STATUS.EXPENSE.OUTSTANDING && !isActive) {
+                        hideProductTrainingTooltip();
+                    }
                     onStatusChange?.();
                     const query = buildSearchQueryString({...queryJSON, status: item.status});
                     Navigation.setParams({q: query});
                 });
-                const isActive = Array.isArray(queryJSON.status) ? queryJSON.status.includes(item.status) : queryJSON.status === item.status;
                 const isFirstItem = index === 0;
                 const isLastItem = index === options.length - 1;
 
                 return (
-                    <Button
-                        key={item.status}
-                        onLayout={(e) => {
-                            if (!isActive || isScrolledRef.current || !('left' in e.nativeEvent.layout)) {
-                                return;
-                            }
-                            isScrolledRef.current = true;
-                            scrollRef.current?.scrollTo({x: (e.nativeEvent.layout.left as number) - styles.pl5.paddingLeft});
+                    <EducationalTooltip
+                        shouldRender={shouldShowProductTrainingTooltip && !isActive && item.status === CONST.SEARCH.STATUS.EXPENSE.OUTSTANDING}
+                        renderTooltipContent={renderProductTrainingTooltip}
+                        wrapperStyle={styles.productTrainingTooltipWrapper}
+                        anchorAlignment={{
+                            horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
+                            vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
                         }}
-                        text={translate(item.text)}
-                        onPress={onPress}
-                        icon={item.icon}
-                        iconFill={isActive ? theme.success : undefined}
-                        iconHoverFill={theme.success}
-                        innerStyles={!isActive && styles.bgTransparent}
-                        hoverStyles={StyleUtils.getBackgroundColorStyle(!isActive ? theme.highlightBG : theme.border)}
-                        textStyles={!isActive && StyleUtils.getTextColorStyle(theme.textSupporting)}
-                        textHoverStyles={StyleUtils.getTextColorStyle(theme.text)}
-                        // We add padding to the first and last items so that they align with the header and table but can overflow outside the screen when scrolled.
-                        style={[isFirstItem && styles.pl5, isLastItem && styles.pr5]}
-                    />
+                        onTooltipPress={onPress}
+                        shiftHorizontal={variables.outstandingExpenseFilterTooltipShiftHorizontal}
+                    >
+                        <Button
+                            key={item.status}
+                            onLayout={(e) => {
+                                if (!isActive || isScrolledRef.current || !('left' in e.nativeEvent.layout)) {
+                                    return;
+                                }
+                                isScrolledRef.current = true;
+                                scrollRef.current?.scrollTo({x: (e.nativeEvent.layout.left as number) - styles.pl5.paddingLeft});
+                            }}
+                            text={translate(item.text)}
+                            onPress={onPress}
+                            icon={item.icon}
+                            iconFill={isActive ? theme.success : undefined}
+                            iconHoverFill={theme.success}
+                            innerStyles={!isActive && styles.bgTransparent}
+                            hoverStyles={StyleUtils.getBackgroundColorStyle(!isActive ? theme.highlightBG : theme.border)}
+                            textStyles={!isActive && StyleUtils.getTextColorStyle(theme.textSupporting)}
+                            textHoverStyles={StyleUtils.getTextColorStyle(theme.text)}
+                            // We add padding to the first and last items so that they align with the header and table but can overflow outside the screen when scrolled.
+                            style={[isFirstItem && styles.pl5, isLastItem && styles.pr5]}
+                        />
+                    </EducationalTooltip>
                 );
             })}
         </ScrollView>

@@ -6677,6 +6677,12 @@ const CONST = {
         GLOBAL_CREATE_TOOLTIP: 'globalCreateTooltip',
         SCAN_TEST_TOOLTIP: 'scanTestTooltip',
         ONBOARDING_TASK_TOOLTIP: 'onboardingTaskTooltip',
+        BOTTOM_NAV_REPORTS_TOOLTIP: 'bottomNavReportsTooltip',
+        OUTSTANDING_EXPENSE_FILTER_TOOLTIP: 'outstandingExpenseFilterTooltip',
+        BOTTOM_NAV_ACCOUNT_SETTINGS_TOOLTIP: 'bottomNavAccountSettingsTooltip',
+        ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP: 'accountSettingsWorkspacesOptionTooltip',
+        WORKSPACE_TOOLTIP: 'workspaceTooltip',
+        MORE_WORKSPACE_FEATURES_TOOLTIP: 'moreWorkspaceFeaturesTooltip',
     },
     SMART_BANNER_HEIGHT: 152,
 

@@ -83,10 +83,16 @@ function BottomTabBar({selectedTab, isTooltipAllowed = false}: BottomTabBarProps
     const [chatTabBrickRoad, setChatTabBrickRoad] = useState<BrickRoad>(undefined);
     const platform = getPlatform();
     const isWebOrDesktop = platform === CONST.PLATFORM.WEB || platform === CONST.PLATFORM.DESKTOP;
-    const {renderProductTrainingTooltip, shouldShowProductTrainingTooltip, hideProductTrainingTooltip} = useProductTrainingContext(
-        CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.BOTTOM_NAV_INBOX_TOOLTIP,
-        isTooltipAllowed && selectedTab !== BOTTOM_TABS.HOME,
-    );
+    const {
+        renderProductTrainingTooltip: renderInboxTooltip,
+        shouldShowProductTrainingTooltip: shouldShowInboxTooltip,
+        hideProductTrainingTooltip: hideInboxTooltip,
+    } = useProductTrainingContext(CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.BOTTOM_NAV_INBOX_TOOLTIP, isTooltipAllowed && selectedTab !== BOTTOM_TABS.HOME);
+    const {
+        renderProductTrainingTooltip: renderReportsTooltip,
+        shouldShowProductTrainingTooltip: shouldShowReportsTooltip,
+        hideProductTrainingTooltip: hideReportsTooltip,
+    } = useProductTrainingContext(CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.BOTTOM_NAV_REPORTS_TOOLTIP, isTooltipAllowed && selectedTab !== BOTTOM_TABS.SEARCH);
     useEffect(() => {
         setChatTabBrickRoad(getChatTabBrickRoad(activeWorkspaceID, orderedReportIDs));
         // We need to get a new brick road state when report actions are updated, otherwise we'll be showing an outdated brick road.
@@ -98,14 +104,15 @@ function BottomTabBar({selectedTab, isTooltipAllowed = false}: BottomTabBarProps
             return;
         }
 
-        hideProductTrainingTooltip();
+        hideInboxTooltip();
         Navigation.navigate(ROUTES.HOME);
-    }, [hideProductTrainingTooltip, selectedTab]);
+    }, [hideInboxTooltip, selectedTab]);
 
     const navigateToSearch = useCallback(() => {
         if (selectedTab === BOTTOM_TABS.SEARCH) {
             return;
         }
+        hideReportsTooltip();
         clearSelectedText();
         interceptAnonymousUser(() => {
             const rootState = navigationRef.getRootState() as State<RootNavigatorParamList>;
@@ -129,7 +136,7 @@ function BottomTabBar({selectedTab, isTooltipAllowed = false}: BottomTabBarProps
             const query = activeWorkspaceID ? `${defaultCannedQuery} ${CONST.SEARCH.SYNTAX_ROOT_KEYS.POLICY_ID}:${activeWorkspaceID}` : defaultCannedQuery;
             Navigation.navigate(ROUTES.SEARCH_ROOT.getRoute({query}));
         });
-    }, [activeWorkspaceID, selectedTab]);
+    }, [activeWorkspaceID, selectedTab, hideReportsTooltip]);
 
     /**
      * The settings tab is related to SettingsSplitNavigator and WorkspaceSplitNavigator.
@@ -140,7 +147,6 @@ function BottomTabBar({selectedTab, isTooltipAllowed = false}: BottomTabBarProps
     const showSettingsPage = useCallback(() => {
         const rootState = navigationRef.getRootState();
         const topmostFullScreenRoute = rootState.routes.findLast((route) => isFullScreenName(route.name));
-
         if (!topmostFullScreenRoute) {
             return;
         }
@@ -209,13 +215,13 @@ function BottomTabBar({selectedTab, isTooltipAllowed = false}: BottomTabBarProps
             )}
             <View style={styles.bottomTabBarContainer}>
                 <EducationalTooltip
-                    shouldRender={shouldShowProductTrainingTooltip}
+                    shouldRender={shouldShowInboxTooltip}
                     anchorAlignment={{
                         horizontal: isWebOrDesktop ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.CENTER : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT,
                         vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
                     }}
                     shiftHorizontal={isWebOrDesktop ? 0 : variables.bottomTabInboxTooltipShiftHorizontal}
-                    renderTooltipContent={renderProductTrainingTooltip}
+                    renderTooltipContent={renderInboxTooltip}
                     wrapperStyle={styles.productTrainingTooltipWrapper}
                     shouldHideOnNavigate={false}
                     onTooltipPress={navigateToChats}
@@ -251,36 +257,50 @@ function BottomTabBar({selectedTab, isTooltipAllowed = false}: BottomTabBarProps
                         </Text>
                     </PressableWithFeedback>
                 </EducationalTooltip>
-                <PressableWithFeedback
-                    onPress={navigateToSearch}
-                    role={CONST.ROLE.BUTTON}
-                    accessibilityLabel={translate('common.reports')}
-                    wrapperStyle={styles.flex1}
-                    style={styles.bottomTabBarItem}
+                <EducationalTooltip
+                    shouldRender={shouldShowReportsTooltip}
+                    renderTooltipContent={renderReportsTooltip}
+                    wrapperStyle={styles.productTrainingTooltipWrapper}
+                    anchorAlignment={{
+                        horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT,
+                        vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
+                    }}
+                    shiftHorizontal={variables.bottomTabReportsTooltipShiftHorizontal}
+                    shouldHideOnNavigate={false}
+                    onTooltipPress={navigateToSearch}
                 >
-                    <View>
-                        <Icon
-                            src={Expensicons.MoneySearch}
-                            fill={selectedTab === BOTTOM_TABS.SEARCH ? theme.iconMenu : theme.icon}
-                            width={variables.iconBottomBar}
-                            height={variables.iconBottomBar}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            styles.textSmall,
-                            styles.textAlignCenter,
-                            styles.mt1Half,
-                            selectedTab === BOTTOM_TABS.SEARCH ? styles.textBold : styles.textSupporting,
-                            styles.bottomTabBarLabel,
-                        ]}
+                    <PressableWithFeedback
+                        onPress={navigateToSearch}
+                        role={CONST.ROLE.BUTTON}
+                        accessibilityLabel={translate('common.reports')}
+                        wrapperStyle={styles.flex1}
+                        style={styles.bottomTabBarItem}
                     >
-                        {translate('common.reports')}
-                    </Text>
-                </PressableWithFeedback>
+                        <View>
+                            <Icon
+                                src={Expensicons.MoneySearch}
+                                fill={selectedTab === BOTTOM_TABS.SEARCH ? theme.iconMenu : theme.icon}
+                                width={variables.iconBottomBar}
+                                height={variables.iconBottomBar}
+                            />
+                        </View>
+                        <Text
+                            style={[
+                                styles.textSmall,
+                                styles.textAlignCenter,
+                                styles.mt1Half,
+                                selectedTab === BOTTOM_TABS.SEARCH ? styles.textBold : styles.textSupporting,
+                                styles.bottomTabBarLabel,
+                            ]}
+                        >
+                            {translate('common.reports')}
+                        </Text>
+                    </PressableWithFeedback>
+                </EducationalTooltip>
                 <BottomTabAvatar
                     isSelected={selectedTab === BOTTOM_TABS.SETTINGS}
                     onPress={showSettingsPage}
+                    isTooltipAllowed={isTooltipAllowed}
                 />
                 <View style={[styles.flex1, styles.bottomTabBarItem]}>
                     <BottomTabBarFloatingActionButton isTooltipAllowed={isTooltipAllowed} />

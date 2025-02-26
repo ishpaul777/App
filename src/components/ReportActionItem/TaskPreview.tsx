@@ -113,7 +113,10 @@ function TaskPreview({taskReportID, action, contextMenuAnchor, chatReportID, che
     if (isDeletedParentAction) {
         return <RenderHTML html={`<deleted-action>${translate('parentReportAction.deletedTask')}</deleted-action>`} />;
     }
-
+    const onPressTaskPreview = () => {
+        hideProductTrainingTooltip();
+        Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(taskReportID));
+    };
     return (
         <View style={[styles.chatItemMessage, !hasAssignee && styles.mv1]}>
             <EducationalTooltip
@@ -126,9 +129,10 @@ function TaskPreview({taskReportID, action, contextMenuAnchor, chatReportID, che
                 }}
                 wrapperStyle={styles.productTrainingTooltipWrapper}
                 shiftHorizontal={variables.gbrTooltipShiftHorizontal}
+                onTooltipPress={onPressTaskPreview}
             >
                 <PressableWithoutFeedback
-                    onPress={() => Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(taskReportID))}
+                    onPress={onPressTaskPreview}
                     onPressIn={() => canUseTouchScreen() && ControlSelection.block()}
                     onPressOut={() => ControlSelection.unblock()}
                     onLongPress={(event) => showContextMenuForReport(event, contextMenuAnchor, chatReportID, action, checkIfContextMenuActive)}

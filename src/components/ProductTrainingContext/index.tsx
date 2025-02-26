@@ -12,6 +12,7 @@ import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {parseFSAttributes} from '@libs/Fullstory';
 import {hasCompletedGuidedSetupFlowSelector} from '@libs/onboardingSelectors';
+import {getActiveAdminWorkspaces} from '@libs/PolicyUtils';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import type ChildrenProps from '@src/types/utils/ChildrenProps';
@@ -38,7 +39,15 @@ function ProductTrainingContextProvider({children}: ChildrenProps) {
     const [isOnboardingCompleted = true, isOnboardingCompletedMetadata] = useOnyx(ONYXKEYS.NVP_ONBOARDING, {
         selector: hasCompletedGuidedSetupFlowSelector,
     });
-    const [introSelected] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED);
+    const [allPolicies, allPoliciesMetadata] = useOnyx(ONYXKEYS.COLLECTION.POLICY);
+    const [currentUserLogin, currentUserLoginMetadata] = useOnyx(ONYXKEYS.SESSION, {selector: (session) => session?.email});
+
+    const isUserPolicyAdmin = useMemo(() => {
+        if (!allPolicies || !currentUserLogin || isLoadingOnyxValue(allPoliciesMetadata, currentUserLoginMetadata)) {
+            return false;
+        }
+        return getActiveAdminWorkspaces(allPolicies, currentUserLogin).length > 0;
+    }, [allPolicies, currentUserLogin, allPoliciesMetadata, currentUserLoginMetadata]);
 
     const [dismissedProductTraining] = useOnyx(ONYXKEYS.NVP_DISMISSED_PRODUCT_TRAINING);
     const {shouldUseNarrowLayout} = useResponsiveLayout();
@@ -88,7 +97,7 @@ function ProductTrainingContextProvider({children}: ChildrenProps) {
             }
 
             const isDismissed =
-                typeof dismissedProductTraining?.[tooltipName] === 'string' ? dismissedProductTraining?.[tooltipName] : dismissedProductTraining?.[tooltipName]?.dismissedTime;
+                typeof dismissedProductTraining?.[tooltipName] === 'string' ? !!dismissedProductTraining?.[tooltipName] : !!dismissedProductTraining?.[tooltipName]?.dismissedTime;
 
             if (isDismissed) {
                 return false;
@@ -110,10 +119,19 @@ function ProductTrainingContextProvider({children}: ChildrenProps) {
 
             return tooltipConfig.shouldShow({
                 shouldUseNarrowLayout,
-                introSelectedChoice: introSelected?.choice,
+                isUserPolicyAdmin,
             });
         },
-        [dismissedProductTraining, hasBeenAddedToNudgeMigration, isOnboardingCompleted, isOnboardingCompletedMetadata, shouldUseNarrowLayout, isModalVisible, isLoadingApp, introSelected],
+        [
+            dismissedProductTraining,
+            hasBeenAddedToNudgeMigration,
+            isOnboardingCompleted,
+            isOnboardingCompletedMetadata,
+            shouldUseNarrowLayout,
+            isModalVisible,
+            isLoadingApp,
+            isUserPolicyAdmin,
+        ],
     );
 
     const registerTooltip = useCallback(
@@ -197,7 +215,7 @@ const useProductTrainingContext = (tooltipName: ProductTrainingTooltipName, shou
                 return;
             }
             const tooltip = TOOLTIPS[tooltipName];
-            tooltip.onHideTooltip(isDismissedUsingX);
+            tooltip.onHideTooltip(tooltipName, isDismissedUsingX);
             unregisterTooltip(tooltipName);
         },
         [tooltipName, shouldShowProductTrainingTooltip, unregisterTooltip],

@@ -270,6 +270,9 @@ export default {
     searchFiltersTooltipShiftHorizontalNarrow: -10,
     searchFiltersTooltipShiftVerticalNarrow: 5,
     bottomTabInboxTooltipShiftHorizontal: 36,
+    bottomTabReportsTooltipShiftHorizontal: 30,
+    outstandingExpenseFilterTooltipShiftHorizontal: -50,
+    bottomTabAccountSettingsTooltipShiftHorizontal: -30,
 
     inlineImagePreviewMinSize: 64,
     inlineImagePreviewMaxSize: 148,

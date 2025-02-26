@@ -5957,6 +5957,34 @@ const translations = {
             part1: 'Complete setup',
             part2: ' tasks',
         },
+        bottomNavReportsTooltip: {
+            part1: 'View your',
+            part2: ' expenses', // bold
+        },
+        outstandingExpenseFilterTooltip: {
+            part1: 'Filter for',
+            part2: ' expenses', // bold
+            part3: ' that',
+            part4: ' \nneed approval',
+        },
+        bottomNavAccountSettingsTooltip: {
+            part1: 'Explore your workspace',
+            part2: '\nand account',
+            part3: ' settings', // bold
+        },
+        accountSettingsWorkspacesOptionTooltip: {
+            part1: 'View your',
+            part2: ' workspaces', // bold
+        },
+        workspaceTooltip: {
+            part1: 'Adjust your',
+            part2: ' workspace', // bold
+            part3: ' settings',
+        },
+        moreWorkspaceFeaturesTooltip: {
+            part1: 'Enable more',
+            part2: ' features', // bold
+        },
     },
     discardChangesConfirmation: {
         title: 'Discard changes?',

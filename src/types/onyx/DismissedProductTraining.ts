@@ -11,6 +11,12 @@ const {
     GLOBAL_CREATE_TOOLTIP,
     SCAN_TEST_TOOLTIP,
     ONBOARDING_TASK_TOOLTIP,
+    BOTTOM_NAV_REPORTS_TOOLTIP,
+    OUTSTANDING_EXPENSE_FILTER_TOOLTIP,
+    BOTTOM_NAV_ACCOUNT_SETTINGS_TOOLTIP,
+    ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP,
+    WORKSPACE_TOOLTIP,
+    MORE_WORKSPACE_FEATURES_TOOLTIP,
 } = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES;
 
 /**
@@ -81,6 +87,36 @@ type DismissedProductTraining = {
      * When user dismisses the onboardingTaskTooltip product training tooltip, we store the timestamp here.
      */
     [ONBOARDING_TASK_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the bottomNavReportsTooltip product training tooltip, we store the timestamp here.
+     */
+    [BOTTOM_NAV_REPORTS_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the outstandingExpenseFilterTooltip product training tooltip, we store the timestamp here.
+     */
+    [OUTSTANDING_EXPENSE_FILTER_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the bottomNavAccountSettingsTooltip product training tooltip, we store the timestamp here.
+     */
+    [BOTTOM_NAV_ACCOUNT_SETTINGS_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the accountSettingsWorkspacesOptionTooltip product training tooltip, we store the timestamp here.
+     */
+    [ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the workspaceTooltip product training tooltip, we store the timestamp here.
+     */
+    [WORKSPACE_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the moreWorkspaceFeaturesTooltip product training tooltip, we store the timestamp here.
+     */
+    [MORE_WORKSPACE_FEATURES_TOOLTIP]: DismissedProductTrainingElement;
 };
 
 export default DismissedProductTraining;

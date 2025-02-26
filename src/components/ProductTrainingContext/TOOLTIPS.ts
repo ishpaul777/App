@@ -1,6 +1,5 @@
 import type {ValueOf} from 'type-fest';
 import {dismissProductTraining} from '@libs/actions/Welcome';
-import type {OnboardingPurpose} from '@src/CONST';
 import CONST from '@src/CONST';
 import type {TranslationPaths} from '@src/languages/types';
 
@@ -15,23 +14,36 @@ const {
     GLOBAL_CREATE_TOOLTIP,
     SCAN_TEST_TOOLTIP,
     ONBOARDING_TASK_TOOLTIP,
+    BOTTOM_NAV_REPORTS_TOOLTIP,
+    OUTSTANDING_EXPENSE_FILTER_TOOLTIP,
+    BOTTOM_NAV_ACCOUNT_SETTINGS_TOOLTIP,
+    ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP,
+    WORKSPACE_TOOLTIP,
+    MORE_WORKSPACE_FEATURES_TOOLTIP,
 } = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES;
 
 type ProductTrainingTooltipName = ValueOf<typeof CONST.PRODUCT_TRAINING_TOOLTIP_NAMES>;
 
 type ShouldShowConditionProps = {
     shouldUseNarrowLayout?: boolean;
-    introSelectedChoice?: OnboardingPurpose;
+    isUserPolicyAdmin?: boolean;
+    hasBeenAddedToNudgeMigration?: boolean;
 };
 
 type TooltipData = {
     content: Array<{text: TranslationPaths; isBold: boolean}>;
-    onHideTooltip: (isDismissedUsingX?: boolean) => void;
+    onHideTooltip: (tooltipName: ProductTrainingTooltipName, isDismissedUsingX?: boolean) => void;
     name: ProductTrainingTooltipName;
     priority: number;
     shouldShow: (props: ShouldShowConditionProps) => boolean;
     shouldRenderActionButtons?: boolean;
 };
+
+const onHideTooltip = (tooltipName: ProductTrainingTooltipName, isDismissedUsingX = false) => {
+    dismissProductTraining(tooltipName, isDismissedUsingX);
+};
+
+const shouldShowAdminOnlyTooltips = ({isUserPolicyAdmin = false, hasBeenAddedToNudgeMigration = false}) => isUserPolicyAdmin && !hasBeenAddedToNudgeMigration;
 
 const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
     [CONCEIRGE_LHN_GBR]: {
@@ -39,17 +51,91 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.conciergeLHNGBR.part1', isBold: false},
             {text: 'productTrainingTooltip.conciergeLHNGBR.part2', isBold: true},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(CONCEIRGE_LHN_GBR, isDismissedUsingX),
+        onHideTooltip,
         name: CONCEIRGE_LHN_GBR,
+        priority: 2000,
+        shouldShow: ({isUserPolicyAdmin = false, hasBeenAddedToNudgeMigration = false, shouldUseNarrowLayout = false}) =>
+            shouldShowAdminOnlyTooltips({isUserPolicyAdmin, hasBeenAddedToNudgeMigration}) && shouldUseNarrowLayout,
+    },
+    [ONBOARDING_TASK_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.onboardingTaskTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.onboardingTaskTooltip.part2', isBold: true},
+        ],
+        onHideTooltip,
+        name: ONBOARDING_TASK_TOOLTIP,
+        priority: 1900,
+        shouldShow: shouldShowAdminOnlyTooltips,
+    },
+    [BOTTOM_NAV_REPORTS_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.bottomNavReportsTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.bottomNavReportsTooltip.part2', isBold: true},
+        ],
+        onHideTooltip,
+        name: BOTTOM_NAV_REPORTS_TOOLTIP,
+        priority: 1800,
+        shouldShow: shouldShowAdminOnlyTooltips,
+    },
+    [OUTSTANDING_EXPENSE_FILTER_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.outstandingExpenseFilterTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.outstandingExpenseFilterTooltip.part2', isBold: true},
+            {text: 'productTrainingTooltip.outstandingExpenseFilterTooltip.part3', isBold: false},
+            {text: 'productTrainingTooltip.outstandingExpenseFilterTooltip.part4', isBold: false},
+        ],
+        onHideTooltip,
+        name: OUTSTANDING_EXPENSE_FILTER_TOOLTIP,
+        priority: 1700,
+        shouldShow: shouldShowAdminOnlyTooltips,
+    },
+    [BOTTOM_NAV_ACCOUNT_SETTINGS_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.bottomNavAccountSettingsTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.bottomNavAccountSettingsTooltip.part2', isBold: true},
+        ],
+        onHideTooltip,
+        name: BOTTOM_NAV_ACCOUNT_SETTINGS_TOOLTIP,
+        priority: 1600,
+        shouldShow: shouldShowAdminOnlyTooltips,
+    },
+    [ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.accountSettingsWorkspacesOptionTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.accountSettingsWorkspacesOptionTooltip.part2', isBold: true},
+        ],
+        onHideTooltip,
+        name: ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP,
+        priority: 1500,
+        shouldShow: shouldShowAdminOnlyTooltips,
+    },
+    [WORKSPACE_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.workspaceTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.workspaceTooltip.part2', isBold: true},
+            {text: 'productTrainingTooltip.workspaceTooltip.part3', isBold: false},
+        ],
+        onHideTooltip,
+        name: WORKSPACE_TOOLTIP,
+        priority: 1400,
+        shouldShow: shouldShowAdminOnlyTooltips,
+    },
+    [MORE_WORKSPACE_FEATURES_TOOLTIP]: {
+        content: [
+            {text: 'productTrainingTooltip.moreWorkspaceFeaturesTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.moreWorkspaceFeaturesTooltip.part2', isBold: true},
+        ],
+        onHideTooltip,
+        name: MORE_WORKSPACE_FEATURES_TOOLTIP,
         priority: 1300,
-        shouldShow: () => true,
+        shouldShow: shouldShowAdminOnlyTooltips,
     },
     [RENAME_SAVED_SEARCH]: {
         content: [
             {text: 'productTrainingTooltip.saveSearchTooltip.part1', isBold: true},
             {text: 'productTrainingTooltip.saveSearchTooltip.part2', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(RENAME_SAVED_SEARCH, isDismissedUsingX),
+        onHideTooltip,
         name: RENAME_SAVED_SEARCH,
         priority: 1250,
         shouldShow: ({shouldUseNarrowLayout}) => !shouldUseNarrowLayout,
@@ -60,7 +146,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.globalCreateTooltip.part2', isBold: false},
             {text: 'productTrainingTooltip.globalCreateTooltip.part3', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(GLOBAL_CREATE_TOOLTIP, isDismissedUsingX),
+        onHideTooltip,
         name: GLOBAL_CREATE_TOOLTIP,
         priority: 1200,
         shouldShow: () => true,
@@ -70,7 +156,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.quickActionButton.part1', isBold: true},
             {text: 'productTrainingTooltip.quickActionButton.part2', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(QUICK_ACTION_BUTTON, isDismissedUsingX),
+        onHideTooltip,
         name: QUICK_ACTION_BUTTON,
         priority: 1150,
         shouldShow: () => true,
@@ -81,7 +167,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.workspaceChatCreate.part2', isBold: true},
             {text: 'productTrainingTooltip.workspaceChatCreate.part3', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(WORKSAPCE_CHAT_CREATE, isDismissedUsingX),
+        onHideTooltip,
         name: WORKSAPCE_CHAT_CREATE,
         priority: 1100,
         shouldShow: () => true,
@@ -91,7 +177,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.searchFilterButtonTooltip.part1', isBold: true},
             {text: 'productTrainingTooltip.searchFilterButtonTooltip.part2', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(SEARCH_FILTER_BUTTON_TOOLTIP, isDismissedUsingX),
+        onHideTooltip,
         name: SEARCH_FILTER_BUTTON_TOOLTIP,
         priority: 1000,
         shouldShow: () => true,
@@ -102,7 +188,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.bottomNavInboxTooltip.part2', isBold: false},
             {text: 'productTrainingTooltip.bottomNavInboxTooltip.part3', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(BOTTOM_NAV_INBOX_TOOLTIP, isDismissedUsingX),
+        onHideTooltip,
         name: BOTTOM_NAV_INBOX_TOOLTIP,
         priority: 900,
         shouldShow: () => true,
@@ -113,7 +199,7 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.workspaceChatTooltip.part2', isBold: false},
             {text: 'productTrainingTooltip.workspaceChatTooltip.part3', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(LHN_WORKSPACE_CHAT_TOOLTIP, isDismissedUsingX),
+        onHideTooltip,
         name: LHN_WORKSPACE_CHAT_TOOLTIP,
         priority: 800,
         shouldShow: () => true,
@@ -129,21 +215,11 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
             {text: 'productTrainingTooltip.scanTestTooltip.part7', isBold: true},
             {text: 'productTrainingTooltip.scanTestTooltip.part8', isBold: false},
         ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(SCAN_TEST_TOOLTIP, isDismissedUsingX),
+        onHideTooltip,
         name: SCAN_TEST_TOOLTIP,
         priority: 900,
         shouldShow: () => false,
         shouldRenderActionButtons: true,
-    },
-    [ONBOARDING_TASK_TOOLTIP]: {
-        content: [
-            {text: 'productTrainingTooltip.onboardingTaskTooltip.part1', isBold: true},
-            {text: 'productTrainingTooltip.onboardingTaskTooltip.part2', isBold: false},
-        ],
-        onHideTooltip: (isDismissedUsingX = false) => dismissProductTraining(ONBOARDING_TASK_TOOLTIP, isDismissedUsingX),
-        name: ONBOARDING_TASK_TOOLTIP,
-        priority: 1100,
-        shouldShow: ({introSelectedChoice}) => introSelectedChoice === CONST.SELECTABLE_ONBOARDING_CHOICES.MANAGE_TEAM,
     },
 };
 
