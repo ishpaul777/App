@@ -1,5 +1,6 @@
 import {findFocusedRoute, useFocusEffect, useNavigationState} from '@react-navigation/native';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import type {StyleProp, ViewStyle} from 'react-native';
 import {View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import type {ValueOf} from 'type-fest';
@@ -28,6 +29,7 @@ import MenuItem from '@components/MenuItem';
 import BottomTabBar from '@components/Navigation/BottomTabBar';
 import BOTTOM_TABS from '@components/Navigation/BottomTabBar/BOTTOM_TABS';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
+import {useProductTrainingContext} from '@components/ProductTrainingContext';
 import ScreenWrapper from '@components/ScreenWrapper';
 import ScrollView from '@components/ScrollView';
 import Text from '@components/Text';
@@ -35,6 +37,7 @@ import useCurrentUserPersonalDetails from '@hooks/useCurrentUserPersonalDetails'
 import useLocalize from '@hooks/useLocalize';
 import useNetwork from '@hooks/useNetwork';
 import usePrevious from '@hooks/usePrevious';
+import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useSingleExecution from '@hooks/useSingleExecution';
 import useThemeStyles from '@hooks/useThemeStyles';
 import useWaitForNavigation from '@hooks/useWaitForNavigation';
@@ -43,6 +46,7 @@ import {isConnectionInProgress} from '@libs/actions/connections';
 import {clearErrors, openPolicyInitialPage, removeWorkspace} from '@libs/actions/Policy/Policy';
 import {checkIfFeedConnectionIsBroken, flatAllCardsList} from '@libs/CardUtils';
 import {convertToDisplayString} from '@libs/CurrencyUtils';
+import {useIsWorkspaceSettingsRouteActive} from '@libs/Navigation/helpers/useRouteActive';
 import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
 import {
@@ -61,6 +65,7 @@ import {
 import {getDefaultWorkspaceAvatar, getIcons, getPolicyExpenseChat, getReportName, getReportOfflinePendingActionAndErrors} from '@libs/ReportUtils';
 import type WORKSPACE_TO_RHP from '@navigation/linkingConfig/RELATIONS/WORKSPACE_TO_RHP';
 import type {WorkspaceSplitNavigatorParamList} from '@navigation/types';
+import variables from '@styles/variables';
 import CONST from '@src/CONST';
 import type {TranslationPaths} from '@src/languages/types';
 import ONYXKEYS from '@src/ONYXKEYS';
@@ -68,6 +73,7 @@ import ROUTES from '@src/ROUTES';
 import SCREENS from '@src/SCREENS';
 import type {PendingAction} from '@src/types/onyx/OnyxCommon';
 import type {PolicyFeatureName} from '@src/types/onyx/Policy';
+import type {TooltipAnchorAlignment} from '@src/types/utils/AnchorAlignment';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import type IconAsset from '@src/types/utils/IconAsset';
 import type {WithPolicyAndFullscreenLoadingProps} from './withPolicyAndFullscreenLoading';
@@ -83,6 +89,13 @@ type WorkspaceMenuItem = {
     screenName: WorkspaceTopLevelScreens;
     badgeText?: string;
     highlighted?: boolean;
+    tooltipAnchorAlignment?: TooltipAnchorAlignment;
+    tooltipShiftHorizontal?: number;
+    tooltipShiftVertical?: number;
+    renderTooltipContent?: () => React.ReactNode;
+    shouldRenderTooltip?: boolean;
+    tooltipWrapperStyle?: StyleProp<ViewStyle>;
+    onEducationTooltipPress?: () => void;
 };
 
 type WorkspaceInitialPageProps = WithPolicyAndFullscreenLoadingProps & PlatformStackScreenProps<WorkspaceSplitNavigatorParamList, typeof SCREENS.WORKSPACE.INITIAL>;
@@ -140,6 +153,12 @@ function WorkspaceInitialPage({policyDraft, policy: policyProp, route}: Workspac
         }),
         [policy],
     ) as PolicyFeatureStates;
+    const {shouldUseNarrowLayout} = useResponsiveLayout();
+    const isFocused = useIsWorkspaceSettingsRouteActive(shouldUseNarrowLayout);
+    const {renderProductTrainingTooltip, shouldShowProductTrainingTooltip, hideProductTrainingTooltip} = useProductTrainingContext(
+        CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.MORE_WORKSPACE_FEATURES_TOOLTIP,
+        isPolicyAdmin(policy, login) && isFocused,
+    );
 
     const fetchPolicyData = useCallback(() => {
         if (policyDraft?.id) {
@@ -307,8 +326,26 @@ function WorkspaceInitialPage({policyDraft, policy: policyProp, route}: Workspac
         protectedMenuItems.push({
             translationKey: 'workspace.common.moreFeatures',
             icon: Gear,
-            action: singleExecution(waitForNavigate(() => Navigation.navigate(ROUTES.WORKSPACE_MORE_FEATURES.getRoute(policyID)))),
+            action: singleExecution(
+                waitForNavigate(() => {
+                    hideProductTrainingTooltip();
+                    Navigation.navigate(ROUTES.WORKSPACE_MORE_FEATURES.getRoute(policyID));
+                }),
+            ),
             screenName: SCREENS.WORKSPACE.MORE_FEATURES,
+            tooltipAnchorAlignment: {
+                vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
+                horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT,
+            },
+            tooltipShiftHorizontal: variables.accountSettingsWorkspacesOptionTooltipShiftHorizontal,
+            tooltipShiftVertical: -(styles.popoverMenuItem.paddingVertical / 2),
+            renderTooltipContent: renderProductTrainingTooltip,
+            tooltipWrapperStyle: styles.productTrainingTooltipWrapper,
+            shouldRenderTooltip: shouldShowProductTrainingTooltip,
+            onEducationTooltipPress: () => {
+                hideProductTrainingTooltip();
+                Navigation.navigate(ROUTES.WORKSPACE_MORE_FEATURES.getRoute(policyID));
+            },
         });
 
         const menuItems: WorkspaceMenuItem[] = [
@@ -332,18 +369,23 @@ function WorkspaceInitialPage({policyDraft, policy: policyProp, route}: Workspac
         return menuItems;
     }, [
         featureStates,
-        hasGeneralSettingsError,
-        hasMembersError,
-        hasPolicyCategoryError,
-        hasSyncError,
-        highlightedFeature,
-        policy,
-        policyID,
-        shouldShowProtectedItems,
         singleExecution,
         waitForNavigate,
+        styles.popoverMenuItem.paddingVertical,
+        styles.productTrainingTooltipWrapper,
+        renderProductTrainingTooltip,
+        shouldShowProductTrainingTooltip,
+        hasGeneralSettingsError,
+        hasMembersError,
+        policy,
+        shouldShowProtectedItems,
+        highlightedFeature,
+        policyID,
         allFeedsCards,
         workspaceAccountID,
+        hasPolicyCategoryError,
+        hasSyncError,
+        hideProductTrainingTooltip,
     ]);
 
     // We only update feature states if they aren't pending.
@@ -474,6 +516,13 @@ function WorkspaceInitialPage({policyDraft, policy: policyProp, route}: Workspac
                                     highlighted={!!item?.highlighted}
                                     focused={!!(item.screenName && activeRoute?.startsWith(item.screenName))}
                                     badgeText={item.badgeText}
+                                    renderTooltipContent={item.renderTooltipContent}
+                                    shouldRenderTooltip={item.shouldRenderTooltip}
+                                    tooltipAnchorAlignment={item.tooltipAnchorAlignment}
+                                    tooltipWrapperStyle={item.tooltipWrapperStyle}
+                                    tooltipShiftHorizontal={item.tooltipShiftHorizontal}
+                                    tooltipShiftVertical={item.tooltipShiftVertical}
+                                    onEducationTooltipPress={item.onEducationTooltipPress}
                                     shouldIconUseAutoWidthStyle
                                 />
                             ))}

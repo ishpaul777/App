@@ -6683,6 +6683,7 @@ const CONST = {
         ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP: 'accountSettingsWorkspacesOptionTooltip',
         WORKSPACE_TOOLTIP: 'workspaceTooltip',
         MORE_WORKSPACE_FEATURES_TOOLTIP: 'moreWorkspaceFeaturesTooltip',
+        EMPLOYEE_WORKSPACE_CHAT_TOOLTIP: 'employeeWorkspaceChatTooltip',
     },
     SMART_BANNER_HEIGHT: 152,
 

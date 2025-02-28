@@ -20,6 +20,7 @@ const {
     ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP,
     WORKSPACE_TOOLTIP,
     MORE_WORKSPACE_FEATURES_TOOLTIP,
+    EMPLOYEE_WORKSPACE_CHAT_TOOLTIP,
 } = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES;
 
 type ProductTrainingTooltipName = ValueOf<typeof CONST.PRODUCT_TRAINING_TOOLTIP_NAMES>;
@@ -130,15 +131,15 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
         priority: 1300,
         shouldShow: shouldShowAdminOnlyTooltips,
     },
-    [RENAME_SAVED_SEARCH]: {
+    [EMPLOYEE_WORKSPACE_CHAT_TOOLTIP]: {
         content: [
-            {text: 'productTrainingTooltip.saveSearchTooltip.part1', isBold: true},
-            {text: 'productTrainingTooltip.saveSearchTooltip.part2', isBold: false},
+            {text: 'productTrainingTooltip.employeeWorkspaceChatTooltip.part1', isBold: false},
+            {text: 'productTrainingTooltip.employeeWorkspaceChatTooltip.part2', isBold: true},
         ],
         onHideTooltip,
-        name: RENAME_SAVED_SEARCH,
-        priority: 1250,
-        shouldShow: ({shouldUseNarrowLayout}) => !shouldUseNarrowLayout,
+        name: EMPLOYEE_WORKSPACE_CHAT_TOOLTIP,
+        priority: 1350,
+        shouldShow: shouldShowAdminOnlyTooltips,
     },
     [GLOBAL_CREATE_TOOLTIP]: {
         content: [
@@ -150,6 +151,16 @@ const TOOLTIPS: Record<ProductTrainingTooltipName, TooltipData> = {
         name: GLOBAL_CREATE_TOOLTIP,
         priority: 1200,
         shouldShow: () => true,
+    },
+    [RENAME_SAVED_SEARCH]: {
+        content: [
+            {text: 'productTrainingTooltip.saveSearchTooltip.part1', isBold: true},
+            {text: 'productTrainingTooltip.saveSearchTooltip.part2', isBold: false},
+        ],
+        onHideTooltip,
+        name: RENAME_SAVED_SEARCH,
+        priority: 1250,
+        shouldShow: ({shouldUseNarrowLayout}) => !shouldUseNarrowLayout,
     },
     [QUICK_ACTION_BUTTON]: {
         content: [

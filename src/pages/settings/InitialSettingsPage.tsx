@@ -17,6 +17,7 @@ import MenuItem from '@components/MenuItem';
 import BottomTabBar from '@components/Navigation/BottomTabBar';
 import BOTTOM_TABS from '@components/Navigation/BottomTabBar/BOTTOM_TABS';
 import {PressableWithFeedback} from '@components/Pressable';
+import {useProductTrainingContext} from '@components/ProductTrainingContext';
 import ScreenWrapper from '@components/ScreenWrapper';
 import {ScrollOffsetContext} from '@components/ScrollOffsetContextProvider';
 import ScrollView from '@components/ScrollView';
@@ -26,12 +27,14 @@ import type {WithCurrentUserPersonalDetailsProps} from '@components/withCurrentU
 import withCurrentUserPersonalDetails from '@components/withCurrentUserPersonalDetails';
 import useLocalize from '@hooks/useLocalize';
 import useNetwork from '@hooks/useNetwork';
+import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useSingleExecution from '@hooks/useSingleExecution';
 import useSubscriptionPlan from '@hooks/useSubscriptionPlan';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {resetExitSurveyForm} from '@libs/actions/ExitSurvey';
 import {convertToDisplayString} from '@libs/CurrencyUtils';
+import {useIsAccountSettingsRouteActive} from '@libs/Navigation/helpers/useRouteActive';
 import Navigation from '@libs/Navigation/Navigation';
 import {getFreeTrialText, hasSubscriptionRedDotError} from '@libs/SubscriptionUtils';
 import {getProfilePageBrickRoadIndicator} from '@libs/UserUtils';
@@ -50,6 +53,7 @@ import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import SCREENS from '@src/SCREENS';
 import type {Icon as TIcon} from '@src/types/onyx/OnyxCommon';
+import type {TooltipAnchorAlignment} from '@src/types/utils/AnchorAlignment';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import type IconAsset from '@src/types/utils/IconAsset';
 
@@ -75,6 +79,13 @@ type MenuData = {
     iconRight?: IconAsset;
     badgeText?: string;
     badgeStyle?: ViewStyle;
+    tooltipAnchorAlignment?: TooltipAnchorAlignment;
+    tooltipShiftHorizontal?: number;
+    tooltipShiftVertical?: number;
+    renderTooltipContent?: () => React.ReactNode;
+    shouldRenderTooltip?: boolean;
+    tooltipWrapperStyle?: StyleProp<ViewStyle>;
+    onEducationTooltipPress?: () => void;
 };
 
 type Menu = {sectionStyle: StyleProp<ViewStyle>; sectionTranslationKey: TranslationPaths; items: MenuData[]};
@@ -112,6 +123,13 @@ function InitialSettingsPage({currentUserPersonalDetails}: InitialSettingsPagePr
 
     const freeTrialText = getFreeTrialText(policies);
     const shouldOpenBookACall = tryNewDot?.classicRedirect?.dismissed === false;
+
+    const {shouldUseNarrowLayout} = useResponsiveLayout();
+    const isScreenFocused = useIsAccountSettingsRouteActive(shouldUseNarrowLayout);
+    const {renderProductTrainingTooltip, shouldShowProductTrainingTooltip, hideProductTrainingTooltip} = useProductTrainingContext(
+        CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP,
+        isScreenFocused && focusedRouteName !== SCREENS.SETTINGS.WORKSPACES,
+    );
 
     useEffect(() => {
         openInitialSettingsPage();
@@ -190,7 +208,23 @@ function InitialSettingsPage({currentUserPersonalDetails}: InitialSettingsPagePr
                 icon: Expensicons.Buildings,
                 screenName: SCREENS.SETTINGS.WORKSPACES,
                 brickRoadIndicator: hasGlobalWorkspaceSettingsRBR(policies, allConnectionSyncProgresses) ? CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR : undefined,
-                action: () => Navigation.navigate(ROUTES.SETTINGS_WORKSPACES),
+                action: () => {
+                    hideProductTrainingTooltip();
+                    Navigation.navigate(ROUTES.SETTINGS_WORKSPACES);
+                },
+                tooltipAnchorAlignment: {
+                    vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
+                    horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT,
+                },
+                tooltipShiftHorizontal: variables.accountSettingsWorkspacesOptionTooltipShiftHorizontal,
+                tooltipShiftVertical: styles.popoverMenuItem.paddingVertical / 2,
+                renderTooltipContent: renderProductTrainingTooltip,
+                tooltipWrapperStyle: styles.productTrainingTooltipWrapper,
+                shouldRenderTooltip: shouldShowProductTrainingTooltip,
+                onEducationTooltipPress: () => {
+                    hideProductTrainingTooltip();
+                    Navigation.navigate(ROUTES.SETTINGS_WORKSPACES);
+                },
             },
             {
                 translationKey: 'allSettingsScreen.domains',
@@ -221,7 +255,20 @@ function InitialSettingsPage({currentUserPersonalDetails}: InitialSettingsPagePr
             sectionTranslationKey: 'common.workspaces',
             items,
         };
-    }, [allConnectionSyncProgresses, freeTrialText, policies, privateSubscription?.errors, styles.badgeSuccess, styles.workspaceSettingsSectionContainer, subscriptionPlan]);
+    }, [
+        allConnectionSyncProgresses,
+        freeTrialText,
+        hideProductTrainingTooltip,
+        policies,
+        privateSubscription?.errors,
+        renderProductTrainingTooltip,
+        shouldShowProductTrainingTooltip,
+        styles.badgeSuccess,
+        styles.popoverMenuItem.paddingVertical,
+        styles.productTrainingTooltipWrapper,
+        styles.workspaceSettingsSectionContainer,
+        subscriptionPlan,
+    ]);
 
     /**
      * Retuns a list of menu items data for general section
@@ -357,6 +404,13 @@ function InitialSettingsPage({currentUserPersonalDetails}: InitialSettingsPagePr
                                 iconRight={item.iconRight}
                                 shouldShowRightIcon={item.shouldShowRightIcon}
                                 shouldIconUseAutoWidthStyle
+                                renderTooltipContent={item.renderTooltipContent}
+                                shouldRenderTooltip={item.shouldRenderTooltip}
+                                tooltipAnchorAlignment={item.tooltipAnchorAlignment}
+                                tooltipWrapperStyle={item.tooltipWrapperStyle}
+                                tooltipShiftHorizontal={item.tooltipShiftHorizontal}
+                                tooltipShiftVertical={item.tooltipShiftVertical}
+                                onEducationTooltipPress={item.onEducationTooltipPress}
                             />
                         );
                     })}

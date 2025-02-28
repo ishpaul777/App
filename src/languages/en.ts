@@ -5985,6 +5985,10 @@ const translations = {
             part1: 'Enable more',
             part2: ' features', // bold
         },
+        employeeWorkspaceChatTooltip: {
+            part1: 'Chat with',
+            part2: ' submitters', // bold
+        },
     },
     discardChangesConfirmation: {
         title: 'Discard changes?',

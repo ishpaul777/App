@@ -17,6 +17,7 @@ const {
     ACCOUNT_SETTINGS_WORKSPACES_OPTION_TOOLTIP,
     WORKSPACE_TOOLTIP,
     MORE_WORKSPACE_FEATURES_TOOLTIP,
+    EMPLOYEE_WORKSPACE_CHAT_TOOLTIP,
 } = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES;
 
 /**
@@ -117,6 +118,11 @@ type DismissedProductTraining = {
      * When user dismisses the moreWorkspaceFeaturesTooltip product training tooltip, we store the timestamp here.
      */
     [MORE_WORKSPACE_FEATURES_TOOLTIP]: DismissedProductTrainingElement;
+
+    /**
+     * When user dismisses the employeeWorkspaceChatTooltip product training tooltip, we store the timestamp here.
+     */
+    [EMPLOYEE_WORKSPACE_CHAT_TOOLTIP]: DismissedProductTrainingElement;
 };
 
 export default DismissedProductTraining;

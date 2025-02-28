@@ -273,6 +273,9 @@ export default {
     bottomTabReportsTooltipShiftHorizontal: 30,
     outstandingExpenseFilterTooltipShiftHorizontal: -50,
     bottomTabAccountSettingsTooltipShiftHorizontal: -30,
+    accountSettingsWorkspacesOptionTooltipShiftHorizontal: 12,
+    workspaceTooltipShiftHorizontal: 4,
+    workspaceTooltipShiftVertical: -2,
 
     inlineImagePreviewMinSize: 64,
     inlineImagePreviewMaxSize: 148,

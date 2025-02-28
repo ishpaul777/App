@@ -12,6 +12,7 @@ import Text from '@components/Text';
 import ThreeDotsMenu from '@components/ThreeDotsMenu';
 import type {LayoutChangeEventWithTarget} from '@components/ThreeDotsMenu/types';
 import Tooltip from '@components/Tooltip';
+import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import type {WithCurrentUserPersonalDetailsProps} from '@components/withCurrentUserPersonalDetails';
 import withCurrentUserPersonalDetails from '@components/withCurrentUserPersonalDetails';
 import WorkspacesListRowDisplayName from '@components/WorkspacesListRowDisplayName';
@@ -70,6 +71,15 @@ type WorkspacesListRowProps = WithCurrentUserPersonalDetailsProps & {
 
     /** is policy defualt */
     isDefault?: boolean;
+
+    /** Determines if product training tooltip should be shown or not */
+    shouldShowProductTrainingTooltip?: boolean;
+
+    /** Render product training tooltip */
+    renderProductTrainingTooltip?: () => React.ReactNode;
+
+    /** On tooltip press */
+    onTooltipPress?: () => void;
 };
 
 type BrickRoadIndicatorIconProps = {
@@ -114,6 +124,9 @@ function WorkspacesListRow({
     isJoinRequestPending,
     policyID,
     isDefault,
+    shouldShowProductTrainingTooltip,
+    renderProductTrainingTooltip,
+    onTooltipPress,
 }: WorkspacesListRowProps) {
     const styles = useThemeStyles();
     const {translate} = useLocalize();
@@ -195,27 +208,42 @@ function WorkspacesListRow({
         </View>
     );
 
+    console.log('shouldShowProductTrainingTooltip', shouldShowProductTrainingTooltip, policyID);
+
     return (
         <View style={[styles.flexRow, styles.highlightBG, rowStyles, style, isWide && styles.gap5, styles.br3, styles.p5]}>
             <View style={[isWide ? styles.flexRow : styles.flexColumn, styles.flex1, isWide && styles.gap5]}>
                 <View style={[styles.flexRow, styles.justifyContentBetween, styles.flex1, isNarrow && styles.mb3, styles.alignItemsCenter]}>
-                    <View style={[styles.flexRow, styles.gap3, styles.flex1, styles.alignItemsCenter]}>
-                        <Avatar
-                            imageStyles={[styles.alignSelfCenter]}
-                            size={CONST.AVATAR_SIZE.DEFAULT}
-                            source={workspaceIcon}
-                            fallbackIcon={fallbackWorkspaceIcon}
-                            avatarID={policyID}
-                            name={title}
-                            type={CONST.ICON_TYPE_WORKSPACE}
-                        />
-                        <Text
-                            numberOfLines={1}
-                            style={[styles.flex1, styles.flexGrow1, styles.textStrong, isDeleted ? styles.offlineFeedback.deleted : {}]}
-                        >
-                            {title}
-                        </Text>
-                    </View>
+                    <EducationalTooltip
+                        shouldRender={shouldShowProductTrainingTooltip}
+                        renderTooltipContent={renderProductTrainingTooltip}
+                        wrapperStyle={styles.productTrainingTooltipWrapper}
+                        anchorAlignment={{
+                            horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT,
+                            vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.BOTTOM,
+                        }}
+                        shiftHorizontal={variables.workspaceTooltipShiftHorizontal}
+                        shiftVertical={variables.workspaceTooltipShiftVertical}
+                        onTooltipPress={onTooltipPress}
+                    >
+                        <View style={[styles.flexRow, styles.gap3, styles.flex1, styles.alignItemsCenter]}>
+                            <Avatar
+                                imageStyles={[styles.alignSelfCenter]}
+                                size={CONST.AVATAR_SIZE.DEFAULT}
+                                source={workspaceIcon}
+                                fallbackIcon={fallbackWorkspaceIcon}
+                                avatarID={policyID}
+                                name={title}
+                                type={CONST.ICON_TYPE_WORKSPACE}
+                            />
+                            <Text
+                                numberOfLines={1}
+                                style={[styles.flex1, styles.flexGrow1, styles.textStrong, isDeleted ? styles.offlineFeedback.deleted : {}]}
+                            >
+                                {title}
+                            </Text>
+                        </View>
+                    </EducationalTooltip>
                     {shouldUseNarrowLayout && ThreeDotMenuOrPendingIcon}
                 </View>
                 <View style={[styles.flexRow, isWide && styles.flex1, styles.gap2, styles.alignItemsCenter]}>

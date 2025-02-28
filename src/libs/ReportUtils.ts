@@ -9179,6 +9179,15 @@ function getReportMetadata(reportID: string | undefined) {
     return reportID ? allReportMetadataKeyValue[reportID] : undefined;
 }
 
+function getFirstEmployeeWorkspaceChat(orderedReportIDs: string[]) {
+    const employeeWorkspaceChats = orderedReportIDs.filter((reportID) => {
+        const report = getReport(reportID, allReports);
+        const policy = getPolicy(report?.policyID);
+        return isPolicyExpenseChat(report) && report?.ownerAccountID !== currentUserAccountID && isPolicyAdminPolicyUtils(policy, currentUserPersonalDetails?.login);
+    });
+    return employeeWorkspaceChats.at(0);
+}
+
 export {
     addDomainToShortMention,
     completeShortMention,
@@ -9517,6 +9526,7 @@ export {
     buildOptimisticSelfDMReport,
     isHiddenForCurrentUser,
     prepareOnboardingOnyxData,
+    getFirstEmployeeWorkspaceChat,
 };
 
 export type {

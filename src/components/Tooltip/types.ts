@@ -85,8 +85,11 @@ type EducationalTooltipProps = ChildrenProps &
         /** Whether the actual Tooltip should be rendered. If false, it's just going to return the children */
         shouldRender?: boolean;
 
-        /** Whether the tooltip should hide when navigating */
+        /** Whether the tooltip should hide when navigating away */
         shouldHideOnNavigate?: boolean;
+
+        /** Whether the tooltip should hide when navigation focus */
+        shouldShowOnNavigationFocus?: boolean;
     };
 
 type TooltipExtendedProps = (EducationalTooltipProps | TooltipProps) & {

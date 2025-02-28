@@ -3,6 +3,7 @@ import React, {useCallback, useMemo, useRef, useState} from 'react';
 import type {GestureResponderEvent, ViewStyle} from 'react-native';
 import {StyleSheet, View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
+import type {ValueOf} from 'type-fest';
 import DisplayNames from '@components/DisplayNames';
 import Hoverable from '@components/Hoverable';
 import Icon from '@components/Icon';
@@ -17,6 +18,7 @@ import Text from '@components/Text';
 import Tooltip from '@components/Tooltip';
 import EducationalTooltip from '@components/Tooltip/EducationalTooltip';
 import useLocalize from '@hooks/useLocalize';
+import {useReportIDs} from '@hooks/useReportIDs';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useRootNavigationState from '@hooks/useRootNavigationState';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -29,6 +31,7 @@ import Parser from '@libs/Parser';
 import Performance from '@libs/Performance';
 import ReportActionComposeFocusManager from '@libs/ReportActionComposeFocusManager';
 import {
+    getFirstEmployeeWorkspaceChat,
     isAdminRoom,
     isChatUsedForOnboarding as isChatUsedForOnboardingReportUtils,
     isConciergeChatReport,
@@ -62,6 +65,9 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     const [isFullscreenVisible] = useOnyx(ONYXKEYS.FULLSCREEN_VISIBILITY);
     const [tryNewDot] = useOnyx(ONYXKEYS.NVP_TRYNEWDOT);
     const session = useSession();
+    const {orderedReportIDs} = useReportIDs();
+    const firstEmployeeWorkspaceChat = getFirstEmployeeWorkspaceChat(orderedReportIDs);
+    const shouldShowEmployeeWorkspaceChatTooltip = firstEmployeeWorkspaceChat === reportID;
     const shouldShowWokspaceChatTooltip = isPolicyExpenseChat(report) && activePolicyID === report?.policyID && session?.accountID === report?.ownerAccountID;
     const isOnboardingGuideAssigned = introSelected?.choice === CONST.ONBOARDING_CHOICES.MANAGE_TEAM && !session?.email?.includes('+');
     const isChatUsedForOnboarding = isChatUsedForOnboardingReportUtils(report, introSelected?.choice);
@@ -71,13 +77,28 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
     const isReportsSplitNavigatorLast = useRootNavigationState((state) => state?.routes?.at(-1)?.name === NAVIGATORS.REPORTS_SPLIT_NAVIGATOR);
 
     const {tooltipToRender, shouldShowTooltip} = useMemo(() => {
-        const tooltip = shouldShowGetStartedTooltip ? CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.CONCEIRGE_LHN_GBR : CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.LHN_WORKSPACE_CHAT_TOOLTIP;
-        const shouldShowTooltips = shouldShowWokspaceChatTooltip || shouldShowGetStartedTooltip;
+        // const tooltip = shouldShowGetStartedTooltip ? CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.CONCEIRGE_LHN_GBR : CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.LHN_WORKSPACE_CHAT_TOOLTIP;
+        let tooltip: ValueOf<typeof CONST.PRODUCT_TRAINING_TOOLTIP_NAMES> = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.LHN_WORKSPACE_CHAT_TOOLTIP;
+        if (shouldShowEmployeeWorkspaceChatTooltip) {
+            tooltip = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.EMPLOYEE_WORKSPACE_CHAT_TOOLTIP;
+        }
+        if (shouldShowGetStartedTooltip) {
+            tooltip = CONST.PRODUCT_TRAINING_TOOLTIP_NAMES.CONCEIRGE_LHN_GBR;
+        }
+        const shouldShowTooltips = shouldShowWokspaceChatTooltip || shouldShowGetStartedTooltip || shouldShowEmployeeWorkspaceChatTooltip;
         const shouldTooltipBeVisible = shouldUseNarrowLayout ? isScreenFocused && isReportsSplitNavigatorLast : isReportsSplitNavigatorLast && !isFullscreenVisible;
 
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return {tooltipToRender: tooltip, shouldShowTooltip: shouldShowTooltips && shouldTooltipBeVisible};
-    }, [shouldShowGetStartedTooltip, shouldShowWokspaceChatTooltip, isScreenFocused, shouldUseNarrowLayout, isReportsSplitNavigatorLast, isFullscreenVisible]);
+    }, [
+        shouldShowGetStartedTooltip,
+        shouldShowWokspaceChatTooltip,
+        isScreenFocused,
+        shouldUseNarrowLayout,
+        isReportsSplitNavigatorLast,
+        isFullscreenVisible,
+        shouldShowEmployeeWorkspaceChatTooltip,
+    ]);
 
     const {shouldShowProductTrainingTooltip, renderProductTrainingTooltip, hideProductTrainingTooltip} = useProductTrainingContext(tooltipToRender, shouldShowTooltip);
 
@@ -180,6 +201,8 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
         onSelectRow(optionItem, popoverAnchor);
     };
 
+    const isTooltipAnchorHorizontalLeft = shouldShowWokspaceChatTooltip || shouldShowEmployeeWorkspaceChatTooltip;
+
     return (
         <OfflineWithFeedback
             pendingAction={optionItem.pendingAction}
@@ -192,11 +215,11 @@ function OptionRowLHN({reportID, isFocused = false, onSelectRow = () => {}, opti
                 shouldRender={shouldShowProductTrainingTooltip}
                 renderTooltipContent={renderProductTrainingTooltip}
                 anchorAlignment={{
-                    horizontal: shouldShowWokspaceChatTooltip ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
+                    horizontal: isTooltipAnchorHorizontalLeft ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
                     vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP,
                 }}
-                shiftHorizontal={shouldShowWokspaceChatTooltip ? variables.workspaceLHNtooltipShiftHorizontal : variables.gbrTooltipShiftHorizontal}
-                shiftVertical={shouldShowWokspaceChatTooltip ? 0 : variables.composerTooltipShiftVertical}
+                shiftHorizontal={isTooltipAnchorHorizontalLeft ? variables.workspaceLHNtooltipShiftHorizontal : variables.gbrTooltipShiftHorizontal}
+                shiftVertical={isTooltipAnchorHorizontalLeft ? 0 : variables.composerTooltipShiftVertical}
                 wrapperStyle={styles.productTrainingTooltipWrapper}
                 onTooltipPress={onOptionPress}
             >
