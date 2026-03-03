@@ -363,25 +363,37 @@ function useSearchBulkActions({queryJSON}: UseSearchBulkActionsParams) {
         }
 
         const withdrawnFilters = queryJSON?.flatFilters?.find((filter) => filter.key === CONST.SEARCH.SYNTAX_FILTER_KEYS.WITHDRAWN)?.filters;
-        let startDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN_OR_EQUAL_TO)?.value;
-        let endDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN_OR_EQUAL_TO)?.value;
+        let startDate: string | number | undefined;
+        let endDate: string | number | undefined;
 
-        if (!startDate || !endDate) {
-            const presetValue = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.EQUAL_TO)?.value;
-            if (typeof presetValue === 'string') {
-                const now = new Date();
-                if (presetValue === CONST.SEARCH.DATE_PRESETS.THIS_MONTH) {
-                    startDate = format(startOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
-                    endDate = format(endOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
-                } else if (presetValue === CONST.SEARCH.DATE_PRESETS.LAST_MONTH) {
-                    const lastMonth = subMonths(now, 1);
-                    startDate = format(startOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
-                    endDate = format(endOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
-                } else if (presetValue === CONST.SEARCH.DATE_PRESETS.YEAR_TO_DATE) {
-                    startDate = format(new Date(now.getFullYear(), 0, 1), CONST.DATE.FNS_FORMAT_STRING);
-                    endDate = format(now, CONST.DATE.FNS_FORMAT_STRING);
-                }
+        startDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN_OR_EQUAL_TO || f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN)
+            ?.value;
+        endDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN_OR_EQUAL_TO || f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN)?.value;
+
+        const eqValue = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.EQUAL_TO)?.value;
+        if (typeof eqValue === 'string') {
+            const now = new Date();
+            if (eqValue === CONST.SEARCH.DATE_PRESETS.THIS_MONTH) {
+                startDate = format(startOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
+                endDate = format(endOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
+            } else if (eqValue === CONST.SEARCH.DATE_PRESETS.LAST_MONTH) {
+                const lastMonth = subMonths(now, 1);
+                startDate = format(startOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
+                endDate = format(endOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
+            } else if (eqValue === CONST.SEARCH.DATE_PRESETS.YEAR_TO_DATE) {
+                startDate = format(new Date(now.getFullYear(), 0, 1), CONST.DATE.FNS_FORMAT_STRING);
+                endDate = format(now, CONST.DATE.FNS_FORMAT_STRING);
+            } else {
+                startDate = eqValue;
+                endDate = eqValue;
             }
+        }
+
+        if (!startDate) {
+            startDate = '2000-01-01';
+        }
+        if (!endDate) {
+            endDate = format(new Date(), CONST.DATE.FNS_FORMAT_STRING);
         }
 
         if (!startDate || !endDate) {
