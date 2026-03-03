@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {InteractionManager} from 'react-native';
-import {endOfMonth, format, startOfMonth, subMonths} from 'date-fns';
+import {format} from 'date-fns';
 import type {ValueOf} from 'type-fest';
 import type {DropdownOption} from '@components/ButtonWithDropdownMenu/types';
 import {useDelegateNoAccessActions, useDelegateNoAccessState} from '@components/DelegateNoAccessModalProvider';
@@ -46,7 +46,7 @@ import {
     isInvoiceReport,
     isIOUReport as isIOUReportUtil,
 } from '@libs/ReportUtils';
-import {navigateToSearchRHP, shouldShowDeleteOption} from '@libs/SearchUIUtils';
+import {adjustTimeRangeToDateFilters, navigateToSearchRHP, shouldShowDeleteOption} from '@libs/SearchUIUtils';
 import {hasTransactionBeenRejected} from '@libs/TransactionUtils';
 import variables from '@styles/variables';
 import {canIOUBePaid, dismissRejectUseExplanation} from '@userActions/IOU';
@@ -362,48 +362,14 @@ function useSearchBulkActions({queryJSON}: UseSearchBulkActionsParams) {
             return;
         }
 
-        const withdrawnFilters = queryJSON?.flatFilters?.find((filter) => filter.key === CONST.SEARCH.SYNTAX_FILTER_KEYS.WITHDRAWN)?.filters;
-        let startDate: string | number | undefined;
-        let endDate: string | number | undefined;
-
-        startDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN_OR_EQUAL_TO || f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN)
-            ?.value;
-        endDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN_OR_EQUAL_TO || f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN)?.value;
-
-        const eqValue = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.EQUAL_TO)?.value;
-        if (typeof eqValue === 'string') {
-            const now = new Date();
-            if (eqValue === CONST.SEARCH.DATE_PRESETS.THIS_MONTH) {
-                startDate = format(startOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
-                endDate = format(endOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
-            } else if (eqValue === CONST.SEARCH.DATE_PRESETS.LAST_MONTH) {
-                const lastMonth = subMonths(now, 1);
-                startDate = format(startOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
-                endDate = format(endOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
-            } else if (eqValue === CONST.SEARCH.DATE_PRESETS.YEAR_TO_DATE) {
-                startDate = format(new Date(now.getFullYear(), 0, 1), CONST.DATE.FNS_FORMAT_STRING);
-                endDate = format(now, CONST.DATE.FNS_FORMAT_STRING);
-            } else {
-                startDate = eqValue;
-                endDate = eqValue;
-            }
-        }
-
-        if (!startDate) {
-            startDate = '2000-01-01';
-        }
-        if (!endDate) {
-            endDate = format(new Date(), CONST.DATE.FNS_FORMAT_STRING);
-        }
-
-        if (!startDate || !endDate) {
-            return;
-        }
+        const withdrawnFilters = queryJSON?.flatFilters?.filter((filter) => filter.key === CONST.SEARCH.SYNTAX_FILTER_KEYS.WITHDRAWN);
+        const defaultRange = {start: '2000-01-01', end: format(new Date(), CONST.DATE.FNS_FORMAT_STRING)};
+        const {start: startDate, end: endDate} = adjustTimeRangeToDateFilters(defaultRange, withdrawnFilters);
 
         const policyID = selectedPolicyIDs.at(0) ?? '';
 
-        pendingCardStatementRef.current = {startDate: String(startDate), endDate: String(endDate)};
-        generateECardStatementPDF({startDate: String(startDate), endDate: String(endDate), policyID});
+        pendingCardStatementRef.current = {startDate, endDate};
+        generateECardStatementPDF({startDate, endDate, policyID});
     }, [isOffline, queryJSON, selectedPolicyIDs]);
 
     // Auto-download the card statement PDF when generation completes
