@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {InteractionManager} from 'react-native';
+import {endOfMonth, format, startOfMonth, subMonths} from 'date-fns';
 import type {ValueOf} from 'type-fest';
 import type {DropdownOption} from '@components/ButtonWithDropdownMenu/types';
 import {useDelegateNoAccessActions, useDelegateNoAccessState} from '@components/DelegateNoAccessModalProvider';
@@ -362,8 +363,26 @@ function useSearchBulkActions({queryJSON}: UseSearchBulkActionsParams) {
         }
 
         const withdrawnFilters = queryJSON?.flatFilters?.find((filter) => filter.key === CONST.SEARCH.SYNTAX_FILTER_KEYS.WITHDRAWN)?.filters;
-        const startDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN_OR_EQUAL_TO)?.value;
-        const endDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN_OR_EQUAL_TO)?.value;
+        let startDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.GREATER_THAN_OR_EQUAL_TO)?.value;
+        let endDate = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.LOWER_THAN_OR_EQUAL_TO)?.value;
+
+        if (!startDate || !endDate) {
+            const presetValue = withdrawnFilters?.find((f) => f.operator === CONST.SEARCH.SYNTAX_OPERATORS.EQUAL_TO)?.value;
+            if (typeof presetValue === 'string') {
+                const now = new Date();
+                if (presetValue === CONST.SEARCH.DATE_PRESETS.THIS_MONTH) {
+                    startDate = format(startOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
+                    endDate = format(endOfMonth(now), CONST.DATE.FNS_FORMAT_STRING);
+                } else if (presetValue === CONST.SEARCH.DATE_PRESETS.LAST_MONTH) {
+                    const lastMonth = subMonths(now, 1);
+                    startDate = format(startOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
+                    endDate = format(endOfMonth(lastMonth), CONST.DATE.FNS_FORMAT_STRING);
+                } else if (presetValue === CONST.SEARCH.DATE_PRESETS.YEAR_TO_DATE) {
+                    startDate = format(new Date(now.getFullYear(), 0, 1), CONST.DATE.FNS_FORMAT_STRING);
+                    endDate = format(now, CONST.DATE.FNS_FORMAT_STRING);
+                }
+            }
+        }
 
         if (!startDate || !endDate) {
             return;
