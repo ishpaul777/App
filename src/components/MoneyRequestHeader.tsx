@@ -3,7 +3,7 @@ import {shouldFailAllRequestsSelector} from '@selectors/Network';
 import {hasSeenTourSelector} from '@selectors/Onboarding';
 import {validTransactionDraftsSelector} from '@selectors/TransactionDraft';
 import type {ReactNode} from 'react';
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {View} from 'react-native';
 import type {OnyxEntry} from 'react-native-onyx';
 import type {ValueOf} from 'type-fest';
@@ -43,6 +43,7 @@ import {
     getPolicyExpenseChat,
     isCurrentUserSubmitter,
     isDM,
+    isOpenReport,
     isSelfDM,
     navigateToDetailsPage,
     rejectMoneyRequestReason,
@@ -51,6 +52,7 @@ import {getReviewNavigationRoute} from '@libs/TransactionPreviewUtils';
 import {
     getOriginalTransactionWithSplitInfo,
     hasCustomUnitOutOfPolicyViolation as hasCustomUnitOutOfPolicyViolationTransactionUtils,
+    hasMultipleSplitChildren,
     hasPendingRTERViolation as hasPendingRTERViolationTransactionUtils,
     isDistanceRequest,
     isDuplicate as isDuplicateTransactionUtils,
@@ -75,7 +77,7 @@ import type IconAsset from '@src/types/utils/IconAsset';
 import BrokenConnectionDescription from './BrokenConnectionDescription';
 import Button from './Button';
 import ButtonWithDropdownMenu from './ButtonWithDropdownMenu';
-import type {DropdownOption} from './ButtonWithDropdownMenu/types';
+import type {ButtonWithDropdownMenuRef, DropdownOption} from './ButtonWithDropdownMenu/types';
 import DecisionModal from './DecisionModal';
 import {useDelegateNoAccessActions, useDelegateNoAccessState} from './DelegateNoAccessModalProvider';
 import HeaderLoadingBar from './HeaderLoadingBar';
@@ -146,7 +148,8 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
     const [rejectModalAction, setRejectModalAction] = useState<ValueOf<
         typeof CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD | typeof CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.REJECT
     > | null>(null);
-    const [isDuplicateActive, temporarilyDisableDuplicateAction] = useThrottledButtonState();
+    const dropdownMenuRef = useRef<ButtonWithDropdownMenuRef>(null);
+
     const [dismissedRejectUseExplanation] = useOnyx(ONYXKEYS.NVP_DISMISSED_REJECT_USE_EXPLANATION);
     const [dismissedHoldUseExplanation] = useOnyx(ONYXKEYS.NVP_DISMISSED_HOLD_USE_EXPLANATION);
     const personalDetails = usePersonalDetails();
@@ -164,9 +167,17 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
     const {currentSearchHash} = useSearchStateContext();
     const {removeTransaction} = useSearchActionsContext();
     const {isExpenseSplit} = getOriginalTransactionWithSplitInfo(transaction, originalTransaction);
+    const [allTransactions] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION);
+    const [allReports] = useOnyx(ONYXKEYS.COLLECTION.REPORT);
+    const hasMultipleSplits = useMemo(
+        () => hasMultipleSplitChildren(allTransactions, allReports, transaction?.comment?.originalTransactionID),
+        [allTransactions, allReports, transaction?.comment?.originalTransactionID],
+    );
+    const isReportOpen = isOpenReport(parentReport);
+    const shouldShowSplitIndicator = isExpenseSplit && (hasMultipleSplits || isReportOpen);
     const [cardList] = useOnyx(ONYXKEYS.CARD_LIST);
     const [transactionDrafts] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION_DRAFT, {selector: validTransactionDraftsSelector});
-    const draftTransactionIDs = Object.keys(transactionDrafts ?? {});
+    const draftTransactionIDs = useMemo(() => Object.keys(transactionDrafts ?? {}), [transactionDrafts]);
 
     const {deleteTransactions} = useDeleteTransactions({report: parentReport, reportActions: parentReportAction ? [parentReportAction] : [], policy});
     const {isBetaEnabled} = usePermissions();
@@ -197,6 +208,17 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
         isDistanceRequest(transaction) &&
         (isParentReportArchived || (activePolicyExpenseChat && (isSelfDM(parentReport) || isParentChatReportDM)))
     );
+
+    const shouldDuplicateCloseModalOnSelect = isDistanceExpenseUnsupportedForDuplicating || hasCustomUnitOutOfPolicyViolation || isPerDiemRequestOnNonDefaultWorkspace;
+
+    const handleDuplicateReset = useCallback(() => {
+        if (shouldDuplicateCloseModalOnSelect) {
+            return;
+        }
+        dropdownMenuRef.current?.setIsMenuVisible(false);
+    }, [shouldDuplicateCloseModalOnSelect]);
+
+    const [isDuplicateActive, temporarilyDisableDuplicateAction] = useThrottledButtonState(handleDuplicateReset);
 
     const {wideRHPRouteKeys} = useWideRHPState();
     const [shouldFailAllRequests] = useOnyx(ONYXKEYS.NETWORK, {selector: shouldFailAllRequestsSelector});
@@ -340,7 +362,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
                         return;
                     }
 
-                    changeMoneyRequestHoldStatus(parentReportAction);
+                    changeMoneyRequestHoldStatus(parentReportAction, transaction);
                 }}
             />
         ),
@@ -411,7 +433,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
         setIsHoldEducationalModalVisible(false);
         setNameValuePair(ONYXKEYS.NVP_DISMISSED_HOLD_USE_EXPLANATION, true, false, !shouldFailAllRequests);
         if (parentReportAction) {
-            changeMoneyRequestHoldStatus(parentReportAction);
+            changeMoneyRequestHoldStatus(parentReportAction, transaction);
         }
     };
 
@@ -419,7 +441,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
         if (rejectModalAction === CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD) {
             dismissRejectUseExplanation();
             if (parentReportAction) {
-                changeMoneyRequestHoldStatus(parentReportAction);
+                changeMoneyRequestHoldStatus(parentReportAction, transaction);
             }
         } else {
             dismissRejectUseExplanation();
@@ -449,7 +471,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
 
                 const isDismissed = isReportSubmitter ? dismissedHoldUseExplanation : dismissedRejectUseExplanation;
                 if (isDismissed || isParentChatReportDM) {
-                    changeMoneyRequestHoldStatus(parentReportAction);
+                    changeMoneyRequestHoldStatus(parentReportAction, transaction);
                 } else if (isReportSubmitter) {
                     setIsHoldEducationalModalVisible(true);
                 } else {
@@ -471,11 +493,11 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
                     return;
                 }
 
-                changeMoneyRequestHoldStatus(parentReportAction);
+                changeMoneyRequestHoldStatus(parentReportAction, transaction);
             },
         },
         [CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.SPLIT]: {
-            text: isExpenseSplit ? translate('iou.editSplits') : translate('iou.split'),
+            text: shouldShowSplitIndicator ? translate('iou.editSplits') : translate('iou.split'),
             icon: expensifyIcons.ArrowSplit,
             value: CONST.REPORT.SECONDARY_ACTIONS.SPLIT,
             onSelected: () => {
@@ -539,7 +561,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
 
                 duplicateTransaction([transaction]);
             },
-            shouldCloseModalOnSelect: isDistanceExpenseUnsupportedForDuplicating || hasCustomUnitOutOfPolicyViolation || isPerDiemRequestOnNonDefaultWorkspace,
+            shouldCloseModalOnSelect: shouldDuplicateCloseModalOnSelect,
         },
         [CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.VIEW_DETAILS]: {
             value: CONST.REPORT.SECONDARY_ACTIONS.VIEW_DETAILS,
@@ -650,6 +672,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
                         {!!primaryAction && primaryActionImplementation[primaryAction]}
                         {!!applicableSecondaryActions.length && (
                             <ButtonWithDropdownMenu
+                                ref={dropdownMenuRef}
                                 success={false}
                                 onPress={() => {}}
                                 shouldAlwaysShowDropdownMenu
@@ -672,6 +695,7 @@ function MoneyRequestHeader({report, parentReportAction, policy, onBackButtonPre
                     {!!primaryAction && <View style={[styles.flexGrow4]}>{primaryActionImplementation[primaryAction]}</View>}
                     {!!applicableSecondaryActions.length && (
                         <ButtonWithDropdownMenu
+                            ref={dropdownMenuRef}
                             success={false}
                             onPress={() => {}}
                             shouldAlwaysShowDropdownMenu
