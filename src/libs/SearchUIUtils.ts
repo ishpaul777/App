@@ -2994,6 +2994,8 @@ function getCardSections(
                 continue;
             }
 
+            const isTravelInvoicingCard = cardGroup.feedCountry === CONST.TRAVEL.PROGRAM_TRAVEL_US;
+
             let formattedCardName = customCardNames?.[cardGroup.cardID];
             if (formattedCardName === undefined) {
                 const cached = cardDescriptionByCardID.get(cardGroup.cardID);
@@ -3006,6 +3008,7 @@ function getCardSections(
                             bank: cardGroup.bank,
                             cardName: cardGroup.cardName,
                             lastFourPAN: cardGroup.lastFourPAN,
+                            nameValuePairs: {feedCountry: cardGroup.feedCountry},
                         } as OnyxTypes.Card,
                         translate,
                         personalDetails?.displayName,
@@ -3016,6 +3019,13 @@ function getCardSections(
                 formattedCardName = formattedCardNameWithDotAndLastFour(formattedCardName, cardGroup.lastFourPAN);
             }
 
+            // Travel invoicing cards live under the "Expensify Card" bank, so the default feed-name
+            // lookup would render them as "Expensify Card". Surface them as "Central invoicing"
+            // to match the per-transaction Card column.
+            const formattedFeedName = isTravelInvoicingCard
+                ? translate('cardTransactions.centralInvoicing')
+                : getFeedNameForDisplay(translate, cardGroup.bank as OnyxTypes.CompanyCardFeed, cardFeeds);
+
             cardSections[key] = {
                 groupedBy: CONST.SEARCH.GROUP_BY.CARD,
                 transactions: [],
@@ -3023,7 +3033,7 @@ function getCardSections(
                 ...personalDetails,
                 ...cardGroup,
                 formattedCardName,
-                formattedFeedName: getFeedNameForDisplay(translate, cardGroup.bank as OnyxTypes.CompanyCardFeed, cardFeeds),
+                formattedFeedName,
                 keyForList: key,
             };
         }

@@ -143,6 +143,9 @@ type SearchCardGroup = {
 
     /** Last four Primary Account Number digits */
     lastFourPAN: string;
+
+    /** Program the card belongs to (e.g. TRAVEL_US). Only set when the card has an explicit feedCountry. */
+    feedCountry?: string;
 };
 
 /** Model of withdrawal ID grouped search result */
